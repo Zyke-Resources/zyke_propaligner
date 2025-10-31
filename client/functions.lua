@@ -96,6 +96,10 @@ end
 
 exports("SetBones", SetBones)
 
+exports("GetBones", function()
+    return Config.Bones
+end)
+
 -- Used when the menu is open, insert alignment data, such as from our consumables/smoking script
 -- This is not used when loading history/preset within our resource, only when inserting after finished editing
 ---@param data AlignmentData
