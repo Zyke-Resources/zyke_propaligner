@@ -16,11 +16,13 @@
     --grey2: 41, 43, 45; /* lightergrey */
     --grey3: 47, 49, 51; /* lightgrey */
     --grey4: 51, 53, 55; /* lightgrey */
+    --grey5: 55, 57, 59; /* lightgrey 2 - border for grey4 boxes */
 
     --blue1: 25, 118, 210; /* blue - Smaller areas & buttons */
     --blue2: 21, 101, 192; /* blue2 - Large areas */
     --blue3: 13, 71, 161; /* blue3 */
 
+    --orange1: 216, 104, 39; /* Muted Orange - Revert button */
     --orange2: 245, 124, 0; /* orange */
     --orange3: 230, 81, 0; /* dark orange */
 
@@ -30,9 +32,13 @@
 
     --green1: 0, 200, 83; /* green sharp*/
     --green2: 76, 175, 80; /* green */
-    --green3: 46, 125, 50; /* green muted */
+    --green3: 67, 160, 71; /* Save Button */
+    --green4: 56, 142, 60;
+    --green5: 46, 125, 50; /* green muted */
 
     --yellow2: 255, 235, 59;
+
+    --purple3: 81, 45, 168; /* Not used yet */
 
     --teal2: 0, 150, 136; /* Teal Sharp/Semi-Sharp */
     --teal3: 0, 137, 123; /* Teal Muted */
