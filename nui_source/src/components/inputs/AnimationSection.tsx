@@ -73,6 +73,10 @@ const AnimationSection = ({
         );
     }, [debouncedClip]);
 
+    // If our entire animation combination is empty, we don't show the "invalid" errors since we allow alignment without an animation
+    // But if one of the inputs is empty whilst the other one isn't, it would be an invalid combination
+    const animComboEmpty = editingData.dict === "" && editingData.clip === "";
+
     return (
         <div
             style={{
@@ -86,7 +90,7 @@ const AnimationSection = ({
                 label={T("animationDict")}
                 value={editingData.dict}
                 error={
-                    isAnimValid.dict.hasEdited && !isAnimValid.dict.valid
+                    isAnimValid.dict.hasEdited && !isAnimValid.dict.valid && !animComboEmpty
                         ? T("invalid")
                         : undefined
                 }
@@ -102,7 +106,7 @@ const AnimationSection = ({
                 label={T("animationClip")}
                 value={editingData.clip}
                 error={
-                    isAnimValid.clip.hasEdited && !isAnimValid.clip.valid
+                    isAnimValid.clip.hasEdited && !isAnimValid.clip.valid && !animComboEmpty
                         ? T("invalid")
                         : undefined
                 }

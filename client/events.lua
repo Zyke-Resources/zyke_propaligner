@@ -51,9 +51,11 @@ RegisterNUICallback("Eventhandler", function(passed, cb)
         end
 
         -- Validate animation dict & clip
-        local validAnims = IsAnimValid(data.editingData.dict, data.editingData.clip)
-        if (not validAnims.dict) then Z.notify("invalidDict") return cb("ok") end
-        if (not validAnims.clip) then Z.notify("invalidClip") return cb("ok") end
+        if (data.editingData.dict ~= "" and data.editingData.clip ~= "") then
+            local validAnims = IsAnimValid(data.editingData.dict, data.editingData.clip)
+            if (not validAnims.dict) then Z.notify("invalidDict") return cb("ok") end
+            if (not validAnims.clip) then Z.notify("invalidClip") return cb("ok") end
+        end
 
         SetNuiFocus(false, false)
         SendNUIMessage({event = "SetSuspension", data = true})

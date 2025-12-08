@@ -213,6 +213,7 @@ end
 
 function Alignment:EnsureAnim(skipCheck)
     if (not self.anim.loopingAnimation) then return end
+    if (self.anim.dict == "" or self.anim.clip == "") then return end
 
     local ply = PlayerPedId()
 
@@ -315,9 +316,11 @@ function Alignment:Enter(data, positionIdx)
         end
     end
 
-    local validAnims = IsAnimValid(data.dict, data.clip)
-    if (not validAnims.dict) then return nil, "invalidDict" end
-    if (not validAnims.clip) then return nil, "invalidClip" end
+    if (data.dict ~= "" and data.clip ~= "") then
+        local validAnims = IsAnimValid(data.dict, data.clip)
+        if (not validAnims.dict) then return nil, "invalidDict" end
+        if (not validAnims.clip) then return nil, "invalidClip" end
+    end
 
     positionIdx = positionIdx or 1
     local position = Config.Settings.alignmentPosition[positionIdx] or Config.Settings.alignmentPosition[1]
