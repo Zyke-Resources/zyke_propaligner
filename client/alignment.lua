@@ -620,7 +620,6 @@ function Alignment:Enter(data, positionIdx)
         SetPedCanPlayAmbientBaseAnims(ply, false)
         SetPedCanHeadIk(ply, false)
         SetPedCanPlayGestureAnims(ply, false)
-        ClearPedSecondaryTask(ply)
 
         Wait(0)
     end
