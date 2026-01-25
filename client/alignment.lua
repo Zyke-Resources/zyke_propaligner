@@ -570,7 +570,14 @@ function Alignment:Enter(data, positionIdx)
             }
         })
 
+        -- Disable idle stuff
         DisableIdleCamera(true)
+        SetPedCanPlayAmbientIdles(ply, true, true)
+        SetPedCanPlayAmbientAnims(ply, false)
+        SetPedCanPlayAmbientBaseAnims(ply, false)
+        SetPedCanHeadIk(ply, false)
+        SetPedCanPlayGestureAnims(ply, false)
+        ClearPedSecondaryTask(ply)
 
         Wait(0)
     end
@@ -619,6 +626,14 @@ function Alignment:Enter(data, positionIdx)
     SetAlignmentData(retVal, "prev")
     SendNUIMessage({event = "SetSuspension", data = false})
     SetNuiFocus(true, true)
+
+    -- Reset idle stuff
+    DisableIdleCamera(false)
+    SetPedCanPlayAmbientIdles(ply, true, true)
+    SetPedCanPlayAmbientAnims(ply, true)
+    SetPedCanPlayAmbientBaseAnims(ply, true)
+    SetPedCanHeadIk(ply, true)
+    SetPedCanPlayGestureAnims(ply, true)
 
 	return retVal
 end
