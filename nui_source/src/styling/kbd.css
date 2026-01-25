@@ -1,8 +1,10 @@
 kbd {
     background: rgb(var(--grey));
     color: rgba(var(--text));
-    border: 1px solid rgba(var(--grey3));
-    border-bottom: 3px solid rgba(var(--grey3));
+    border-top: 1px solid rgba(var(--grey2));
+    border-bottom: 4px solid rgba(var(--grey5));
+    border-left: 3px solid rgba(var(--grey3));
+    border-right: 3px solid rgba(var(--grey3));
     padding: var(--spadding) var(--mpadding);
     border-radius: var(--mborderRadius);
     font-size: 1.4rem;

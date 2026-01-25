@@ -286,6 +286,48 @@ function Alignment:HighlightParticleOrigins()
     end
 end
 
+-- We moved away from scaleforms, but we're keeping the button handling code for now, since it's already set up
+function Alignment:HandleKeybinds()
+    local pressed = self.scaleform:handleButtons()
+    if (pressed) then
+        self.buttons:ensureLabels()
+        self:UpdateUI()
+    end
+end
+
+function Alignment:UpdateUI()
+    local buttons = {}
+    for i = 1, #self.buttons.items do
+        buttons[i] = {
+            label = self.buttons.items[i].label,
+            key = self.buttons.items[i].key,
+        }
+    end
+
+    local animData = Z.table.copy(self.anim)
+    animData.getAnimDur = nil
+
+    SendNUIMessage({
+        event = "UpdateAlignmentUIData",
+        data = {
+            orgPos = Alignment.orgPos,
+            isActive = Alignment.active == self,
+
+            anim = animData,
+            props = self.props,
+            particles = self.hasParticles and self.props[self.propIdx].particles or nil,
+            currMode = self.currMode,
+            propIdx = self.propIdx,
+            particleIdx = self.particleIdx,
+            propHighlight = self.propHighlight,
+            pos = self.pos,
+            propRaise = self.propRaise,
+
+            buttons = {items = buttons},
+        }
+    })
+end
+
 ---@param data AlignmentData
 ---@param positionIdx? integer @Alignment position index, or nil to use 1
 ---@return {offset: Vector3Table, rotation: Vector3Table}[] | nil, FailReason?
@@ -547,10 +589,11 @@ function Alignment:Enter(data, positionIdx)
     self.buttons:ensureLabels()
 
     self:EnsureAnim(true)
+    self:UpdateUI()
     while (Alignment.active == self) do
         ply = PlayerPedId()
-        self.scaleform:render()
-        self.scaleform:handleButtons()
+
+        self:HandleKeybinds()
 
         self:RestrictMovement()
         self:EnsureAnim()
@@ -581,6 +624,15 @@ function Alignment:Enter(data, positionIdx)
 
         Wait(0)
     end
+
+    -- Hide keybinds when exiting alignment
+    SendNUIMessage({
+        event = "UpdateAlignmentUIData",
+        data = {
+            isActive = false,
+            buttons = {items = {}},
+        }
+    })
 
 	-- Block the pause menu for a bit afterwards
     -- Without a loop like this it doesn't block properly

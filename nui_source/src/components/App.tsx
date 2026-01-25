@@ -4,6 +4,7 @@ import { TranslationProvider } from "../context/Translation";
 import { ModalProvider } from "../context/ModalContext";
 import { ConfigProvider } from "../context/ConfigContext";
 import { VisualizeDataProvider } from "../context/VisualizeData";
+import AlignmentData from "./alignemt_data/AlignmentData";
 
 function App() {
     return (
@@ -14,6 +15,7 @@ function App() {
                         <ThreeComponent />
                         <VisualizeDataProvider>
                             <MainMenu />
+                            <AlignmentData />
                         </VisualizeDataProvider>
                     </div>
                 </ModalProvider>

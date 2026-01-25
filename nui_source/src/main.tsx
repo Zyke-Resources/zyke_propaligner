@@ -8,6 +8,7 @@ import "./styling/inputs.css";
 import "./styling/text.css";
 import "./styling/progress.css";
 import "./styling/pagination.css";
+import "./styling/kbd.css";
 import App from "./components/App";
 import EnsureLoader from "./context/EnsureLoader";
 
