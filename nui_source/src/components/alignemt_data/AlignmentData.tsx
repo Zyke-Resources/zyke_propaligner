@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ParticleAlignmentData, PropAlignmentData } from '../../types';
 import { listen } from '../utils/nui-events';
 import Keybinds from './Keybinds';
+import AnimationTimeline from './AnimationTimeline';
 
 interface AlignmentData {
 	orgPos: { x: number; y: number; z: number };
@@ -45,11 +46,18 @@ const AlignmentData = () => {
 			left: "50%",
 			transform: "translateX(-50%)",
 			zIndex: 10,
+			display: "flex",
+			flexDirection: "column",
+			alignItems: "stretch",
+			gap: "0.5rem",
+			width: "80%",
+			maxWidth: "1600px",
 		}}>
 			<div className="alignment-data">
 
 			</div>
 			<Keybinds items={alignmentData.buttons.items} />
+			<AnimationTimeline />
 		</div>
 	)
 }

@@ -1,0 +1,122 @@
+.animation-timeline {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(var(--dark4), 0.8);
+    border: 1px solid rgba(var(--grey5), 1.0);
+    border-radius: var(--lborderRadius);
+    box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.5);
+    font-family: "Saira", "Ubuntu Mono", monospace;
+    font-size: 1.2rem;
+    color: rgba(var(--text));
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.timeline-state {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 4.5rem;
+    flex-shrink: 0;
+}
+
+.timeline-state-icon {
+    font-size: 1.4rem !important;
+    width: 1.4rem !important;
+    height: 1.4rem !important;
+}
+
+.timeline-state-icon.paused {
+    color: rgba(var(--orange2));
+}
+
+.timeline-state-icon.playing {
+    color: rgba(var(--green2));
+}
+
+.timeline-state-icon.waiting {
+    color: rgba(var(--yellow2));
+}
+
+.timeline-speed {
+    font-size: 1rem;
+    color: rgba(var(--textMuted));
+    min-width: 2.5rem;
+}
+
+.timeline-track {
+    flex: 1;
+    height: 12px;
+    background: rgba(var(--dark2), 0.9);
+    border-radius: 2px;
+    position: relative;
+    border: 1px solid rgba(var(--grey3), 0.6);
+}
+
+/* Track tick marks */
+.timeline-track::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Creates the 10 tick marks across the timeline */
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(10% - 1px),
+        rgba(var(--grey5), 0.4) calc(10% - 1px),
+        rgba(var(--grey5), 0.4) 10%
+    );
+    pointer-events: none;
+}
+
+/* Playhead/tick marker - thin vertical line like video editors */
+.timeline-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(var(--blue1));
+    box-shadow: 0 0 4px rgba(var(--blue1), 0.8);
+    z-index: 2;
+}
+
+/* Small triangle at top */
+.timeline-playhead::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid rgba(var(--blue1));
+}
+
+.timeline-playhead.waiting {
+    background: rgba(var(--yellow2));
+    box-shadow: 0 0 4px rgba(var(--yellow2), 0.8);
+}
+
+.timeline-playhead.waiting::before {
+    border-top-color: rgba(var(--yellow2));
+}
+
+.timeline-playhead.paused {
+    opacity: 0.6;
+}
+
+.timeline-time {
+    font-size: 1.1rem;
+    color: rgba(var(--textMuted));
+    min-width: 7rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}

@@ -235,6 +235,9 @@ function Alignment:EnsureAnim(skipCheck)
         while (not IsPlayingAnim(self.anim.dict, self.anim.clip)) do Wait(1) end
 
         SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, self.anim.animSpeedIdx * self.anim.speedMultiplier)
+
+        -- Sync timeline after animation actually starts
+        self:SendAnimationProgress()
     end
 end
 
@@ -324,6 +327,26 @@ function Alignment:UpdateUI()
             propRaise = self.propRaise,
 
             buttons = {items = buttons},
+        }
+    })
+
+    self:SendAnimationProgress()
+end
+
+-- Send animation progress data to NUI for timeline (optimistic rendering)
+-- Only called on state changes, UI animates locally based on duration/speed
+function Alignment:SendAnimationProgress()
+    local isActive = Alignment.active == self and self.anim.dict ~= "" and self.anim.clip ~= ""
+
+    SendNUIMessage({
+        event = "UpdateAnimationProgress",
+        data = {
+            isActive = isActive,
+            duration = isActive and self.anim:getAnimDur() or 0,
+            speed = self.anim.animSpeedIdx * self.anim.speedMultiplier,
+            isPaused = not self.anim.loopingAnimation,
+            delayBetweenLoops = self.anim.startAnimDelay / 1000,
+            startedAt = GetGameTimer(),
         }
     })
 end
@@ -498,6 +521,8 @@ function Alignment:Enter(data, positionIdx)
             else
                 self:EnsureAnim(true)
             end
+
+            self:SendAnimationProgress()
         end},
         {label = "Speed", key = {"SCROLLDOWN", "SCROLLUP"},
             getLabel = function()
@@ -517,6 +542,7 @@ function Alignment:Enter(data, positionIdx)
                 SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, self.anim.animSpeedIdx * self.anim.speedMultiplier)
                 self.buttons:ensureLabels()
                 ClearPedTasks(ply)
+                self:SendAnimationProgress()
             end
         },
         {label = "Iterate Current", key = {"UP", "DOWN"},
@@ -603,8 +629,6 @@ function Alignment:Enter(data, positionIdx)
             self:EnsureParticles()
         end
 
-        Z.drawText(("Anim. Progress: %s/%ss"):format(math.floor(GetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip) * self.anim:getAnimDur() * 100) / 100, self.anim:getAnimDur()), 0.9, 0.9, nil, nil, "right")
-
         SendNUIMessage({
             event = "setCameraPosition",
             data = {
@@ -630,6 +654,14 @@ function Alignment:Enter(data, positionIdx)
         data = {
             isActive = false,
             buttons = {items = {}},
+        }
+    })
+
+    -- Hide animation timeline
+    SendNUIMessage({
+        event = "UpdateAnimationProgress",
+        data = {
+            isActive = false,
         }
     })
 
