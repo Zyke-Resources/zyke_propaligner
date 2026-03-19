@@ -47,6 +47,11 @@ const AnimationTimeline = () => {
 				setCurrentTime(0);
 				setIsInDelay(false);
 			}
+		} else if (data.isActive && data.isPaused && !data.isFrozen) {
+			// Animation toggled off (X key) - reset tick to start
+			lastFrozenTimeRef.current = 0;
+			setCurrentTime(0);
+			setIsInDelay(false);
 		}
 	});
 

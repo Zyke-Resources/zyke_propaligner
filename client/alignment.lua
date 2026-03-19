@@ -549,10 +549,29 @@ function Alignment:Enter(data, positionIdx)
             end
 
             self:SendAnimationProgress()
+
+            -- Reset the timeline tick visually when toggling off
+            if (not self.anim.loopingAnimation) then
+                SendNUIMessage({
+                    event = "SyncAnimationTime",
+                    data = {
+                        currentAnimTime = 0,
+                        isPlaying = false,
+                    }
+                })
+            end
         end},
         {label = T("instruct:pauseAnim"), key = "SPACE", func = function()
             if (self.anim.dict == "" or self.anim.clip == "") then return end
-            if (not self.anim.loopingAnimation) then return end
+
+            -- If animation was toggled off with X, re-enable and start fresh
+            if (not self.anim.loopingAnimation) then
+                self.anim.loopingAnimation = true
+                self.anim.isFrozen = false
+                self:EnsureAnim(true)
+                self:SendAnimationProgress()
+                return
+            end
 
             self.anim.isFrozen = not self.anim.isFrozen
 
