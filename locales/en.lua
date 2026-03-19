@@ -68,6 +68,7 @@ return {
     ["instruct:toggleFocus"] = "Toggle Focus (Hold)",
     ["instruct:toggleRot"] = "Toggle Off/Rot (When Focus Toggled)",
     ["instruct:toggleAnim"] = "Toggle Animation",
+    ["instruct:pauseAnim"] = "Pause Animation",
     ["instruct:speed"] = "Speed - %s", -- %s = speed
     ["instruct:currProp"] = "Prop (%s/%s)", -- %s = current, %s = total
     ["instruct:currParticle"] = "Particle (%s/%s)", -- %s = current, %s = total]
