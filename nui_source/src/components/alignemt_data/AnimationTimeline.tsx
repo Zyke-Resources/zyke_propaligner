@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { listen } from '../utils/nui-events';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -10,6 +10,10 @@ interface AnimationProgressData {
 	duration: number;
 	speed: number;
 	isPaused: boolean;
+	isFrozen: boolean;
+	isResuming: boolean;
+	frozenAnimTime: number; // 0.0 - 1.0 progress
+	currentAnimTime: number; // 0.0 - 1.0 progress (actual current position)
 	delayBetweenLoops: number;
 	startedAt: number;
 	isActive: boolean;
@@ -19,74 +23,47 @@ const AnimationTimeline = () => {
 	const [animData, setAnimData] = useState<AnimationProgressData | null>(null);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [isInDelay, setIsInDelay] = useState(false);
-	const animationRef = useRef<number | null>(null);
-	const startTimeRef = useRef<number>(0);
-	const pausedAtRef = useRef<number>(0);
+	const lastFrozenTimeRef = useRef<number>(0);
 
+	// Handle state changes (freeze, resume, pause, speed change, etc.)
 	listen("UpdateAnimationProgress", (data: AnimationProgressData) => {
 		setAnimData(data);
 
 		if (data.isActive && !data.isPaused) {
-			// Reset animation start time for sync
-			startTimeRef.current = performance.now();
-			pausedAtRef.current = 0;
-			setCurrentTime(0);
-			setIsInDelay(false);
-		} else if (data.isPaused) {
-			pausedAtRef.current = currentTime;
+			if (data.isFrozen) {
+				// When freezing, use the frozen time from the game (0.0 - 1.0 * duration)
+				const frozenTimeInSeconds = data.frozenAnimTime * data.duration;
+				lastFrozenTimeRef.current = frozenTimeInSeconds;
+				setCurrentTime(frozenTimeInSeconds);
+				setIsInDelay(false);
+			} else if (data.isResuming) {
+				// Resuming from frozen - show the frozen position until sync takes over
+				const frozenTimeInSeconds = lastFrozenTimeRef.current;
+				setCurrentTime(frozenTimeInSeconds);
+				setIsInDelay(false);
+			} else {
+				// Animation restarted - reset to beginning
+				lastFrozenTimeRef.current = 0;
+				setCurrentTime(0);
+				setIsInDelay(false);
+			}
 		}
 	});
 
-	// Local time counter using requestAnimationFrame
-	useEffect(() => {
-		if (!animData || !animData.isActive) {
-			if (animationRef.current) {
-				cancelAnimationFrame(animationRef.current);
-				animationRef.current = null;
-			}
-			return;
+	// Per-frame sync: game drives the timeline position directly
+	// No independent clock, no drift possible
+	listen("SyncAnimationTime", (data: { currentAnimTime: number; isPlaying: boolean }) => {
+		if (!animData || !animData.isActive || animData.isPaused || animData.isFrozen) return;
+
+		if (data.isPlaying) {
+			setCurrentTime(data.currentAnimTime * animData.duration);
+			setIsInDelay(false);
+		} else {
+			// Animation between loops (delay period)
+			setCurrentTime(animData.duration);
+			setIsInDelay(true);
 		}
-
-		const updateTime = () => {
-			if (!animData || animData.isPaused) {
-				return;
-			}
-
-			const elapsed = (performance.now() - startTimeRef.current) / 1000;
-			const adjustedElapsed = elapsed * animData.speed;
-
-			// Full cycle = animation duration + delay
-			const fullCycle = animData.duration + animData.delayBetweenLoops;
-			const cyclePosition = adjustedElapsed % fullCycle;
-
-			// Check if we're in the delay period
-			if (cyclePosition > animData.duration) {
-				setIsInDelay(true);
-				setCurrentTime(animData.duration); // Cap at duration during delay
-			} else {
-				setIsInDelay(false);
-				setCurrentTime(cyclePosition);
-			}
-
-			animationRef.current = requestAnimationFrame(updateTime);
-		};
-
-		if (!animData.isPaused) {
-			animationRef.current = requestAnimationFrame(updateTime);
-		}
-
-		return () => {
-			if (animationRef.current) {
-				cancelAnimationFrame(animationRef.current);
-			}
-		};
-	}, [animData?.isActive, animData?.isPaused, animData?.speed, animData?.duration, animData?.delayBetweenLoops]);
-
-	useEffect(() => {
-		if (animData?.isPaused) {
-			setCurrentTime(pausedAtRef.current);
-		}
-	}, [animData?.isPaused]);
+	});
 
 	if (!animData || !animData.isActive) {
 		return null;
@@ -97,10 +74,13 @@ const AnimationTimeline = () => {
 	};
 
 	// Progress percentage for the "tick" / "playhead" position
-	const progress = Math.min((currentTime / animData.duration) * 100, 100);
+	// Clamp between 0 and 100, handle NaN/invalid values
+	const safeCurrentTime = Math.max(0, currentTime || 0);
+	const safeDuration = animData.duration > 0 ? animData.duration : 1;
+	const progress = Math.max(0, Math.min((safeCurrentTime / safeDuration) * 100, 100));
 
 	const renderStateIcon = () => {
-		if (animData.isPaused) {
+		if (animData.isPaused || animData.isFrozen) {
 			return <PauseIcon className="timeline-state-icon paused" />;
 		}
 		if (isInDelay) {
@@ -127,7 +107,7 @@ const AnimationTimeline = () => {
 				{/* Timeline track with playhead */}
 				<div className="timeline-track">
 					<div
-						className={`timeline-playhead ${animData.isPaused ? 'paused' : ''} ${isInDelay ? 'waiting' : ''}`}
+						className={`timeline-playhead ${(animData.isPaused || animData.isFrozen) ? 'paused' : ''} ${isInDelay ? 'waiting' : ''}`}
 						style={{ left: `${progress}%` }}
 					/>
 				</div>

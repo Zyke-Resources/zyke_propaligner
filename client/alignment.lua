@@ -213,6 +213,7 @@ end
 
 function Alignment:EnsureAnim(skipCheck)
     if (not self.anim.loopingAnimation) then return end
+    if (self.anim.isFrozen) then return end
     if (self.anim.dict == "" or self.anim.clip == "") then return end
 
     local ply = PlayerPedId()
@@ -226,10 +227,9 @@ function Alignment:EnsureAnim(skipCheck)
     if (not IsPlayingAnim(self.anim.dict, self.anim.clip)) then
         self.anim.stoppedAnim = 0
 
-        local isAnimInf = IsAnimInfinite(self.anim.dict, self.anim.clip)
-        local animDur = isAnimInf and -1 or math.floor((GetAnimDuration(self.anim.dict, self.anim.clip) * (1.0 / (self.anim.animSpeedIdx * self.anim.speedMultiplier)) * 1000))
-
-        TaskPlayAnim(ply, self.anim.dict, self.anim.clip, 1.0, 1.0, animDur, 49, 0.0, false, false, false)
+        -- Use infinite duration for smooth looping
+        -- I previously didn't use infinite duration for some reason, but I forgot why, and now it works, lol
+        TaskPlayAnim(ply, self.anim.dict, self.anim.clip, 8.0, 8.0, -1, 49, 0.0, false, false, false)
 
         -- Wait for the animation to start playing
         while (not IsPlayingAnim(self.anim.dict, self.anim.clip)) do Wait(1) end
@@ -241,7 +241,24 @@ function Alignment:EnsureAnim(skipCheck)
     end
 end
 
--- Loop the props and then the particles, we check if there is a handle in the particles table and validate that
+-- Keep animation frozen at the captured position
+function Alignment:EnsureAnimFrozen()
+    if (not self.anim.isFrozen) then return end
+    if (self.anim.dict == "" or self.anim.clip == "") then return end
+
+    local ply = PlayerPedId()
+
+    -- If the animation died while frozen (ex. duration expired), restart it
+    if (not IsPlayingAnim(self.anim.dict, self.anim.clip)) then
+        TaskPlayAnim(ply, self.anim.dict, self.anim.clip, 6767.0, 6767.0, -1, 49, 0.0, false, false, false)
+        while (not IsPlayingAnim(self.anim.dict, self.anim.clip)) do Wait(1) end
+    end
+
+    -- Continuously set the animation to the frozen position to prevent it from ending
+    SetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip, self.anim.frozenAnimTime)
+    SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, 0.0)
+end
+
 -- If there is no handle or it is invalid, we start the particle effect
 function Alignment:EnsureParticles()
     for i = 1, #self.props do
@@ -329,8 +346,6 @@ function Alignment:UpdateUI()
             buttons = {items = buttons},
         }
     })
-
-    self:SendAnimationProgress()
 end
 
 -- Send animation progress data to NUI for timeline (optimistic rendering)
@@ -345,6 +360,10 @@ function Alignment:SendAnimationProgress()
             duration = isActive and self.anim:getAnimDur() or 0,
             speed = self.anim.animSpeedIdx * self.anim.speedMultiplier,
             isPaused = not self.anim.loopingAnimation,
+            isFrozen = self.anim.isFrozen,
+            isResuming = self.anim.isResuming,
+            frozenAnimTime = self.anim.frozenAnimTime,
+            currentAnimTime = isActive and GetEntityAnimCurrentTime(PlayerPedId(), self.anim.dict, self.anim.clip) or 0,
             delayBetweenLoops = self.anim.startAnimDelay / 1000,
             startedAt = GetGameTimer(),
         }
@@ -450,6 +469,9 @@ function Alignment:Enter(data, positionIdx)
 	---@field animSpeedIdx integer
 	---@field speedMultiplier number
 	---@field loopingAnimation boolean
+	---@field isFrozen boolean
+	---@field isResuming boolean
+	---@field frozenAnimTime number
 	---@field stoppedAnim integer
 	---@field startAnimDelay integer
 	---@field getAnimDur fun(): number
@@ -461,6 +483,9 @@ function Alignment:Enter(data, positionIdx)
         animSpeedIdx = 10,
         speedMultiplier = 0.05,
         loopingAnimation = true,
+        isFrozen = false,
+        isResuming = false,
+        frozenAnimTime = 0.0,
         stoppedAnim = 0,
         startAnimDelay = 1500, -- waitBetween
         getAnimDur = function()
@@ -515,6 +540,7 @@ function Alignment:Enter(data, positionIdx)
         },
         {label = T("instruct:toggleAnim"), key = "X", func = function()
             self.anim.loopingAnimation = not self.anim.loopingAnimation
+            self.anim.isFrozen = false
 
             if (not self.anim.loopingAnimation) then
                 ClearPedTasks(ply)
@@ -523,6 +549,30 @@ function Alignment:Enter(data, positionIdx)
             end
 
             self:SendAnimationProgress()
+        end},
+        {label = T("instruct:pauseAnim"), key = "SPACE", func = function()
+            if (self.anim.dict == "" or self.anim.clip == "") then return end
+            if (not self.anim.loopingAnimation) then return end
+
+            self.anim.isFrozen = not self.anim.isFrozen
+
+            if (self.anim.isFrozen) then
+                -- Capture current animation progress (0.0 - 1.0)
+                self.anim.frozenAnimTime = GetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip)
+
+                -- Freeze in place - no need to restart animation, just stop it
+                SetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip, self.anim.frozenAnimTime)
+                SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, 0.0)
+
+                self:SendAnimationProgress()
+            else
+                -- Resume from frozen position - just restore speed
+                -- Timeline is game-driven so it always matches regardless of duration quirks
+                self.anim.isResuming = true
+                SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, self.anim.animSpeedIdx * self.anim.speedMultiplier)
+                self:SendAnimationProgress()
+                self.anim.isResuming = false
+            end
         end},
         {label = "Speed", key = {"SCROLLDOWN", "SCROLLUP"},
             getLabel = function()
@@ -623,6 +673,20 @@ function Alignment:Enter(data, positionIdx)
 
         self:RestrictMovement()
         self:EnsureAnim()
+        self:EnsureAnimFrozen()
+
+        -- Sync timeline with actual game animation position every frame
+        if (self.anim.loopingAnimation and not self.anim.isFrozen and self.anim.dict ~= "" and self.anim.clip ~= "") then
+            local isPlaying = IsPlayingAnim(self.anim.dict, self.anim.clip)
+
+            SendNUIMessage({
+                event = "SyncAnimationTime",
+                data = {
+                    currentAnimTime = isPlaying and GetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip) or 0,
+                    isPlaying = isPlaying,
+                }
+            })
+        end
 
         if (self.hasParticles) then
             self:HighlightParticleOrigins()
