@@ -20,6 +20,38 @@ RegisterNUICallback("Eventhandler:moveEntity", function(data, cb)
 	Alignment.active:HandleMoveEntity(data.data, cb)
 end)
 
+RegisterNUICallback("Eventhandler:seekAnimation", function(data, cb)
+	if (not Alignment.active) then return cb("ok") end
+
+	local self = Alignment.active
+	local seekData = data.data
+	if (not seekData or self.anim.dict == "" or self.anim.clip == "") then return cb("ok") end
+
+	local ply = PlayerPedId()
+	local seekTime = math.max(0.0, math.min(seekData.time + 0.0, 1.0))
+
+	-- Force pause on first seek (mousedown)
+	if (seekData.pause) then
+		self.anim.isFrozen = true
+		self.anim.loopingAnimation = true
+	end
+
+	-- Ensure the animation is playing so we can set its time
+	if (not IsPlayingAnim(self.anim.dict, self.anim.clip)) then
+		TaskPlayAnim(ply, self.anim.dict, self.anim.clip, 6767.0, 6767.0, -1, 49, 0.0, false, false, false)
+		while (not IsPlayingAnim(self.anim.dict, self.anim.clip)) do Wait(1) end
+	end
+
+	-- Seek to the position and freeze
+	self.anim.frozenAnimTime = seekTime
+	SetEntityAnimCurrentTime(ply, self.anim.dict, self.anim.clip, seekTime)
+	SetEntityAnimSpeed(ply, self.anim.dict, self.anim.clip, 0.0)
+
+	self:SendAnimationProgress()
+
+	cb("ok")
+end)
+
 AddEventHandler("onResourceStop", function(resourceName)
 	if (resourceName ~= GetCurrentResourceName()) then return end
 	if (not Alignment.active) then return end

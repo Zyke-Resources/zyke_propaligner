@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { listen } from '../utils/nui-events';
+import { listen, send } from '../utils/nui-events';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
@@ -23,7 +23,77 @@ const AnimationTimeline = () => {
 	const [animData, setAnimData] = useState<AnimationProgressData | null>(null);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [isInDelay, setIsInDelay] = useState(false);
+	const [isDragging, setIsDragging] = useState(false);
 	const lastFrozenTimeRef = useRef<number>(0);
+	const isDraggingRef = useRef(false);
+	const trackRef = useRef<HTMLDivElement>(null);
+	const animDataRef = useRef<AnimationProgressData | null>(null);
+
+	// Keep a ref in sync with animData so drag callbacks always have current data
+	animDataRef.current = animData;
+
+	// Calculate normalized time (0.0 - 1.0) from a mouse event relative to the track
+	const getNormalizedTimeFromMouse = useCallback((clientX: number): number => {
+		if (!trackRef.current) return 0;
+		const rect = trackRef.current.getBoundingClientRect();
+		const x = clientX - rect.left;
+		return Math.max(0, Math.min(x / rect.width, 1));
+	}, []);
+
+	// Send seek to Lua
+	const seekTo = useCallback((normalizedTime: number, pause: boolean) => {
+		const data = animDataRef.current;
+		if (!data || !data.isActive) return;
+
+		send("seekAnimation", { time: normalizedTime, pause }, "seekAnimation");
+
+		// Update UI immediately for responsiveness
+		setCurrentTime(normalizedTime * data.duration);
+		lastFrozenTimeRef.current = normalizedTime * data.duration;
+		setIsInDelay(false);
+	}, []);
+
+	// Mouse move handler (attached to window during drag)
+	const handleMouseMove = useCallback((e: MouseEvent) => {
+		if (!isDraggingRef.current) return;
+		const normalizedTime = getNormalizedTimeFromMouse(e.clientX);
+		seekTo(normalizedTime, false);
+	}, [getNormalizedTimeFromMouse, seekTo]);
+
+	// Mouse up handler (attached to window during drag)
+	const handleMouseUp = useCallback(() => {
+		isDraggingRef.current = false;
+		setIsDragging(false);
+		window.removeEventListener('mousemove', handleMouseMove);
+		window.removeEventListener('mouseup', handleMouseUp);
+	}, [handleMouseMove]);
+
+	// Mouse down on track - start dragging
+	const handleMouseDown = useCallback((e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		const data = animDataRef.current;
+		if (!data || !data.isActive) return;
+		if (data.isPaused && !data.isFrozen) return; // Animation toggled off with X
+
+		isDraggingRef.current = true;
+		setIsDragging(true);
+
+		const normalizedTime = getNormalizedTimeFromMouse(e.clientX);
+		seekTo(normalizedTime, true); // First seek forces pause
+
+		window.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('mouseup', handleMouseUp);
+	}, [getNormalizedTimeFromMouse, seekTo, handleMouseMove, handleMouseUp]);
+
+	// Cleanup listeners on unmount
+	useEffect(() => {
+		return () => {
+			window.removeEventListener('mousemove', handleMouseMove);
+			window.removeEventListener('mouseup', handleMouseUp);
+		};
+	}, [handleMouseMove, handleMouseUp]);
 
 	// Handle state changes (freeze, resume, pause, speed change, etc.)
 	listen("UpdateAnimationProgress", (data: AnimationProgressData) => {
@@ -57,7 +127,9 @@ const AnimationTimeline = () => {
 
 	// Per-frame sync: game drives the timeline position directly
 	// No independent clock, no drift possible
+	// Ignore sync messages while dragging so the UI follows the mouse
 	listen("SyncAnimationTime", (data: { currentAnimTime: number; isPlaying: boolean }) => {
+		if (isDraggingRef.current) return;
 		if (!animData || !animData.isActive || animData.isPaused || animData.isFrozen) return;
 
 		if (data.isPlaying) {
@@ -97,7 +169,7 @@ const AnimationTimeline = () => {
 	return (
 		<AnimatePresence>
 			<motion.div
-				className="animation-timeline"
+				className={`animation-timeline ${isDragging ? 'dragging' : ''}`}
 				initial={{ y: 50, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
 				exit={{ y: 50, opacity: 0 }}
@@ -109,8 +181,12 @@ const AnimationTimeline = () => {
 					<span className="timeline-speed">{animData.speed.toFixed(2)}x</span>
 				</div>
 
-				{/* Timeline track with playhead */}
-				<div className="timeline-track">
+				{/* Timeline track with playhead - draggable */}
+				<div
+					className="timeline-track"
+					ref={trackRef}
+					onMouseDown={handleMouseDown}
+				>
 					<div
 						className={`timeline-playhead ${(animData.isPaused || animData.isFrozen) ? 'paused' : ''} ${isInDelay ? 'waiting' : ''}`}
 						style={{ left: `${progress}%` }}

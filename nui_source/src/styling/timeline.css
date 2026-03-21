@@ -53,6 +53,17 @@
     border-radius: 2px;
     position: relative;
     border: 1px solid rgba(var(--grey3), 0.6);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.timeline-track:hover {
+    border-color: rgba(var(--blue1), 0.6);
+}
+
+.animation-timeline.dragging .timeline-track {
+    cursor: grabbing;
+    border-color: rgba(var(--blue1), 0.8);
 }
 
 /* Track tick marks */
