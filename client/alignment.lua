@@ -763,6 +763,8 @@ function Alignment:Enter(data, positionIdx)
         Wait(0)
     end
 
+    ClearPedTasks(PlayerPedId())
+
     -- Hide keybinds when exiting alignment
     SendNUIMessage({
         event = "UpdateAlignmentUIData",
