@@ -1,7 +1,5 @@
-// The container around the keybind
-
 import { Box } from '@mantine/core';
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface KeybindContainerProps {
 	label: string;
@@ -11,8 +9,29 @@ interface KeybindContainerProps {
 }
 
 const KeybindContainer: React.FC<KeybindContainerProps> = ({ label, keyBind, func, isFirst }) => {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [showSeparator, setShowSeparator] = useState(!isFirst);
+
+	const measureRow = () => {
+		if (isFirst || !containerRef.current) {
+			setShowSeparator(false);
+			return;
+		}
+
+		const prev = containerRef.current.previousElementSibling as HTMLElement | null;
+		setShowSeparator(prev ? containerRef.current.offsetTop === prev.offsetTop : false);
+	};
+
+	useLayoutEffect(measureRow);
+
+	useEffect(() => {
+		window.addEventListener('resize', measureRow);
+
+		return () => window.removeEventListener('resize', measureRow);
+	}, [isFirst]);
+
 	return (
-		<div style={{
+		<div ref={containerRef} style={{
 			position: "relative",
 			display: "flex",
 			alignItems: "center",
@@ -20,7 +39,7 @@ const KeybindContainer: React.FC<KeybindContainerProps> = ({ label, keyBind, fun
 			height: "4rem",
 			padding: "0.5rem 1rem",
 		}}>
-			{!isFirst && (
+			{showSeparator && (
 				<div style={{
 					width: "2px",
 					height: "70%",
