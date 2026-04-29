@@ -14,17 +14,17 @@ Config.Settings = {
     },
     alignmentPosition = {
         {
-            label = "Sky",
-            name = "sky",
-            getPosition = function()
-                return vector3(0, 0, 1000)
-            end
-        },
-        {
             label = "Current Position",
             name = "current",
             getPosition = function()
                 return GetEntityCoords(PlayerPedId()) - vector3(0, 0, 0.985)
+            end
+        },
+        {
+            label = "Sky",
+            name = "sky",
+            getPosition = function()
+                return vector3(0, 0, 1000)
             end
         }
     }
