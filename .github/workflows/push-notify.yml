@@ -1,0 +1,21 @@
+name: Push Notifications
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: self-hosted
+    steps:
+      - name: Notify API
+        env:
+          API_WEBHOOK_KEY: ${{ secrets.API_WEBHOOK_KEY }}
+          PUSH_EVENT: ${{ toJson(github.event) }}
+        run: |
+          echo "$PUSH_EVENT" > /tmp/push_payload.json
+          curl -sf -X POST "https://api.zykeresources.com/webhook/github/push" \
+            -H "Content-Type: application/json" \
+            -H "X-Webhook-Key: $API_WEBHOOK_KEY" \
+            -d @/tmp/push_payload.json
+          rm -f /tmp/push_payload.json
