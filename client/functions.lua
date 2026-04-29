@@ -33,6 +33,13 @@ end
 
 ---@param data AlignmentData
 function AddToHistory(data)
+    local encoded = json.encode(data)
+    if (string.find(encoded, "NaN")) then
+        print("[WARN] AddToHistory: data contains NaN, skipping save")
+
+        return
+    end
+
     local history = GetResourceKvpString("zyke_propaligner:History") or "[]"
     history = json.decode(history)
 
@@ -61,8 +68,57 @@ end
 
 ---@return HistoryData[]
 function GetHistory()
-    return json.decode(GetResourceKvpString("zyke_propaligner:History") or "[]")
+    local raw = GetResourceKvpString("zyke_propaligner:History") or "[]"
+    raw = string.gsub(raw, "NaN", "null")
+    raw = string.gsub(raw, "Infinity", "null")
+    raw = string.gsub(raw, "%-Infinity", "null")
+    local history = json.decode(raw)
+
+    local chunkSize = 10
+
+    for i = 1, #history, chunkSize do
+        local chunk = {}
+
+        for j = i, math.min(i + chunkSize - 1, #history) do
+            chunk[#chunk + 1] = history[j]
+        end
+
+        local chunkJson = json.encode(chunk)
+        SendNUIMessage({
+            event = "HistoryChunk",
+            data = {
+                itemsJson = chunkJson,
+                index = math.floor((i - 1) / chunkSize),
+                total = math.ceil(#history / chunkSize),
+            }
+        })
+    end
+
+    if (#history == 0) then
+        SendNUIMessage({
+            event = "HistoryChunk",
+            data = {
+                itemsJson = "[]",
+                index = 0,
+                total = 1,
+            }
+        })
+    end
+
+    return {}
 end
+
+CreateThread(function()
+    local raw = GetResourceKvpString("zyke_propaligner:History") or "[]"
+    if (string.find(raw, "NaN") or string.find(raw, "Infinity")) then
+        print("[INFO] Sanitizing corrupted history entries...")
+        raw = string.gsub(raw, "NaN", "null")
+        raw = string.gsub(raw, "Infinity", "null")
+        raw = string.gsub(raw, "%-Infinity", "null")
+        SetResourceKvp("zyke_propaligner:History", raw)
+        print("[INFO] History sanitized")
+    end
+end)
 
 AlignmentMenuMounted = false
 function OpenMenu()
