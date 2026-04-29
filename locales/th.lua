@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "เมนูจัดตำแหน่งวัตถุ",
     ["propLabel"] = "วัตถุ",
     ["propBone"] = "กระดูกยึดติด",
-    ["animationDict"] = "พจนานุกรมแอนิเมชัน",
-    ["animationClip"] = "คลิปแอนิเมชัน",
+    ["animationDict"] = "พจนานุกรม",
+    ["animationClip"] = "คลิป",
     ["startEditing"] = "เริ่มแก้ไข",
     ["propList"] = "วัตถุทั้งหมด",
     ["propOffsetTitle"] = "การเลื่อนวัตถุ",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "อนุภาค",
     ["visualizeData"] = "แสดงข้อมูล",
     ["alignmentPosition"] = "ตำแหน่งการจัดเรียง",
-    ["baseAnimations"] = "แอนิเมชันพื้นฐาน",
+    ["baseAnimations"] = "แอนิเมชัน",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "บันทึก",

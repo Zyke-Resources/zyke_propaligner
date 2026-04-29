@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import TextInput from "../utils/TextInput";
+import Select from "../utils/Select";
 import { MdAnimation } from "react-icons/md";
 import { AlignmentData } from "../../types";
 import { useTranslation } from "../../context/Translation";
 import { callback } from "../utils/nui-events";
 import { useDebouncedValue } from "@mantine/hooks";
+import { Animation } from "../MainMenu";
 
 interface animValidation {
     hasEdited: boolean;
@@ -14,9 +16,11 @@ interface animValidation {
 const AnimationSection = ({
     editingData,
     setEditingData,
+    animations,
 }: {
     editingData: AlignmentData;
     setEditingData: React.Dispatch<React.SetStateAction<AlignmentData>>;
+    animations: Animation[];
 }) => {
     const T = useTranslation();
     const [debouncedDict] = useDebouncedValue(editingData.dict, 500);
@@ -81,13 +85,35 @@ const AnimationSection = ({
         <div
             style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "1fr 1fr 1fr",
                 gap: "1rem",
+                paddingTop: "0.75rem"
             }}
         >
+            <Select
+                label={T("baseAnimations")}
+                icon={<MdAnimation />}
+                placeholder={"Custom"}
+                value={editingData.dict + ":" + editingData.clip}
+                content={animations.map((item) => ({
+                    label: item.label,
+                    name: item.dict + ":" + item.clip,
+                }))}
+                onChange={(value) => {
+                    const [dict, clip] = value.split(":");
+
+                    setEditingData((prev) => ({
+                        ...prev,
+                        dict,
+                        clip,
+                    }));
+                }}
+                style={{ paddingTop: "0" }}
+            />
             <TextInput
                 icon={<MdAnimation />}
                 label={T("animationDict")}
+                placeholder={T("animationDict")}
                 value={editingData.dict}
                 error={
                     isAnimValid.dict.hasEdited && !isAnimValid.dict.valid && !animComboEmpty
@@ -100,10 +126,12 @@ const AnimationSection = ({
                         dict: e.target.value,
                     }))
                 }
+                style={{ paddingTop: "0" }}
             />
             <TextInput
                 icon={<MdAnimation />}
                 label={T("animationClip")}
+                placeholder={T("animationClip")}
                 value={editingData.clip}
                 error={
                     isAnimValid.clip.hasEdited && !isAnimValid.clip.valid && !animComboEmpty
@@ -116,6 +144,7 @@ const AnimationSection = ({
                         clip: e.target.value,
                     }))
                 }
+                style={{ paddingTop: "0" }}
             />
         </div>
     );

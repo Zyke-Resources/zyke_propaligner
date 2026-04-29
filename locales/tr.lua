@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Nesne Hizalama Menüsü",
     ["propLabel"] = "Nesne",
     ["propBone"] = "Bağlantı Kemiği",
-    ["animationDict"] = "Animasyon Sözlüğü",
-    ["animationClip"] = "Animasyon Klibi",
+    ["animationDict"] = "Sözlük",
+    ["animationClip"] = "Klip",
     ["startEditing"] = "Düzenlemeye Başla",
     ["propList"] = "Nesneler",
     ["propOffsetTitle"] = "Nesne Ofseti",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Parçacık",
     ["visualizeData"] = "Verileri Görselleştir",
     ["alignmentPosition"] = "Hizalama Konumu",
-    ["baseAnimations"] = "Temel Animasyonlar",
+    ["baseAnimations"] = "Animasyonlar",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Kaydet",

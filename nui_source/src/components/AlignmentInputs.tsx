@@ -23,7 +23,6 @@ import CodeIcon from "@mui/icons-material/Code";
 import Select from "./utils/Select";
 import { useConfig } from "../context/ConfigContext";
 import MapIcon from "@mui/icons-material/Map";
-import { MdAnimation } from "react-icons/md";
 import { Animation } from "./MainMenu";
 
 interface LocalProps {
@@ -100,11 +99,11 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                 dict: data.data.dict,
                 clip: data.data.clip,
                 props: data.data.props.map((item) =>
-                    // item.tempId ? { ...item, tempId: Math.random() } : item
-                    ({
-                        ...item,
-                        tempId: Math.floor(Math.random() * 1000000),
-                    })
+                // item.tempId ? { ...item, tempId: Math.random() } : item
+                ({
+                    ...item,
+                    tempId: Math.floor(Math.random() * 1000000),
+                })
                 ),
             });
         }, 100);
@@ -242,29 +241,10 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
+                        gridTemplateColumns: "1fr",
                         gap: "1rem",
                     }}
                 >
-                    <Select
-                        label={T("baseAnimations")}
-                        icon={<MdAnimation />}
-                        value={editingData.dict + ":" + editingData.clip}
-                        content={animations.map((item) => ({
-                            label: item.label,
-                            name: item.dict + ":" + item.clip,
-                        }))}
-                        onChange={(value) => {
-                            const [dict, clip] = value.split(":");
-
-                            setEditingData((prev) => ({
-                                ...prev,
-                                dict,
-                                clip,
-                            }));
-                        }}
-                    />
-
                     <Select
                         label={T("alignmentPosition")}
                         icon={<MapIcon />}
@@ -292,6 +272,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                 <AnimationSection
                     editingData={editingData}
                     setEditingData={setEditingData}
+                    animations={animations}
                 />
 
                 <PropList

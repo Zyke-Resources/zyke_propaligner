@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "物体对齐菜单",
     ["propLabel"] = "物体",
     ["propBone"] = "附着骨骼",
-    ["animationDict"] = "动画字典",
-    ["animationClip"] = "动画片段",
+    ["animationDict"] = "字典",
+    ["animationClip"] = "片段",
     ["startEditing"] = "开始编辑",
     ["propList"] = "物体列表",
     ["propOffsetTitle"] = "物体偏移",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "粒子",
     ["visualizeData"] = "可视化数据",
     ["alignmentPosition"] = "对齐位置",
-    ["baseAnimations"] = "基础动画",
+    ["baseAnimations"] = "动画",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "保存",

@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "プロップ配置メニュー",
     ["propLabel"] = "プロップ",
     ["propBone"] = "接続ボーン",
-    ["animationDict"] = "アニメーション辞書",
-    ["animationClip"] = "アニメーションクリップ",
+    ["animationDict"] = "辞書",
+    ["animationClip"] = "クリップ",
     ["startEditing"] = "編集を開始",
     ["propList"] = "プロップ一覧",
     ["propOffsetTitle"] = "プロップオフセット",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "パーティクル",
     ["visualizeData"] = "データを表示",
     ["alignmentPosition"] = "配置位置",
-    ["baseAnimations"] = "基本アニメーション",
+    ["baseAnimations"] = "アニメーション",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "保存",

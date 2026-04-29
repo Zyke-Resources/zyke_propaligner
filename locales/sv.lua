@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Objektjusteringsmeny",
     ["propLabel"] = "Objekt",
     ["propBone"] = "Fästben",
-    ["animationDict"] = "Animationslexikon",
-    ["animationClip"] = "Animationsklipp",
+    ["animationDict"] = "Lexikon",
+    ["animationClip"] = "Klipp",
     ["startEditing"] = "Börja redigera",
     ["propList"] = "Objekt",
     ["propOffsetTitle"] = "Objektförskjutning",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Partikel",
     ["visualizeData"] = "Visualisera data",
     ["alignmentPosition"] = "Justeringsposition",
-    ["baseAnimations"] = "Basanimationer",
+    ["baseAnimations"] = "Animationer",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Spara",

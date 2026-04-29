@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Menu wyrównywania obiektów",
     ["propLabel"] = "Obiekt",
     ["propBone"] = "Kość mocowania",
-    ["animationDict"] = "Słownik animacji",
-    ["animationClip"] = "Klip animacji",
+    ["animationDict"] = "Słownik",
+    ["animationClip"] = "Klip",
     ["startEditing"] = "Rozpocznij edycję",
     ["propList"] = "Obiekty",
     ["propOffsetTitle"] = "Przesunięcie obiektu",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Cząsteczka",
     ["visualizeData"] = "Wizualizuj dane",
     ["alignmentPosition"] = "Pozycja wyrównania",
-    ["baseAnimations"] = "Podstawowe animacje",
+    ["baseAnimations"] = "Animacje",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Zapisz",

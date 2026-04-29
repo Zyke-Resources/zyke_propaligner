@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Object uitlijningsmenu",
     ["propLabel"] = "Object",
     ["propBone"] = "Bevestigingsbot",
-    ["animationDict"] = "Animatiewoordenboek",
-    ["animationClip"] = "Animatieclip",
+    ["animationDict"] = "Woordenboek",
+    ["animationClip"] = "Clip",
     ["startEditing"] = "Bewerken starten",
     ["propList"] = "Objecten",
     ["propOffsetTitle"] = "Object verschuiving",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Deeltje",
     ["visualizeData"] = "Gegevens visualiseren",
     ["alignmentPosition"] = "Uitlijningspositie",
-    ["baseAnimations"] = "Basisanimaties",
+    ["baseAnimations"] = "Animaties",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Opslaan",

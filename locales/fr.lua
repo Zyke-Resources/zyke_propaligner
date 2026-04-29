@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Menu d'alignement des objets",
     ["propLabel"] = "Objet",
     ["propBone"] = "Os d'attache",
-    ["animationDict"] = "Dictionnaire d'animations",
-    ["animationClip"] = "Clip d'animation",
+    ["animationDict"] = "Dictionnaire",
+    ["animationClip"] = "Clip",
     ["startEditing"] = "Commencer l'édition",
     ["propList"] = "Objets",
     ["propOffsetTitle"] = "Décalage de l'objet",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Particule",
     ["visualizeData"] = "Visualiser les données",
     ["alignmentPosition"] = "Position d'alignement",
-    ["baseAnimations"] = "Animations de base",
+    ["baseAnimations"] = "Animations",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Enregistrer",

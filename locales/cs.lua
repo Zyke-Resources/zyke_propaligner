@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Nabídka zarovnání objektů",
     ["propLabel"] = "Objekt",
     ["propBone"] = "Kost připojení",
-    ["animationDict"] = "Slovník animací",
-    ["animationClip"] = "Klip animace",
+    ["animationDict"] = "Slovník",
+    ["animationClip"] = "Klip",
     ["startEditing"] = "Začít úpravy",
     ["propList"] = "Objekty",
     ["propOffsetTitle"] = "Posun objektu",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Částice",
     ["visualizeData"] = "Vizualizovat data",
     ["alignmentPosition"] = "Pozice zarovnání",
-    ["baseAnimations"] = "Základní animace",
+    ["baseAnimations"] = "Animace",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Uložit",

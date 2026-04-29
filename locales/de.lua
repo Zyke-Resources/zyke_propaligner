@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Objekt-Ausrichtungsmenü",
     ["propLabel"] = "Objekt",
     ["propBone"] = "Befestigungsknochen",
-    ["animationDict"] = "Animations-Wörterbuch",
-    ["animationClip"] = "Animations-Clip",
+    ["animationDict"] = "Wörterbuch",
+    ["animationClip"] = "Clip",
     ["startEditing"] = "Bearbeitung starten",
     ["propList"] = "Objekte",
     ["propOffsetTitle"] = "Objekt-Versatz",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Partikel",
     ["visualizeData"] = "Daten visualisieren",
     ["alignmentPosition"] = "Ausrichtungsposition",
-    ["baseAnimations"] = "Basis-Animationen",
+    ["baseAnimations"] = "Animationen",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Speichern",

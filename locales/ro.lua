@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Meniu de aliniere obiecte",
     ["propLabel"] = "Obiect",
     ["propBone"] = "Os de atașare",
-    ["animationDict"] = "Dicționar de animații",
-    ["animationClip"] = "Clip de animație",
+    ["animationDict"] = "Dicționar",
+    ["animationClip"] = "Clip",
     ["startEditing"] = "Începe editarea",
     ["propList"] = "Obiecte",
     ["propOffsetTitle"] = "Deplasare obiect",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Particulă",
     ["visualizeData"] = "Vizualizează datele",
     ["alignmentPosition"] = "Poziție de aliniere",
-    ["baseAnimations"] = "Animații de bază",
+    ["baseAnimations"] = "Animații",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Salvează",

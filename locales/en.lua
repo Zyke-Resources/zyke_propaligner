@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Prop Alignment Menu",
     ["propLabel"] = "Prop",
     ["propBone"] = "Attachment Bone",
-    ["animationDict"] = "Animation Dictionary",
-    ["animationClip"] = "Animation Clip",
+    ["animationDict"] = "Dictionary",
+    ["animationClip"] = "Clip",
     ["startEditing"] = "Start Editing",
     ["propList"] = "Props",
     ["propOffsetTitle"] = "Prop Offset",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Particle",
     ["visualizeData"] = "Visualize Data",
     ["alignmentPosition"] = "Alignment Position",
-    ["baseAnimations"] = "Base Animations",
+    ["baseAnimations"] = "Animations",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Save",

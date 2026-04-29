@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "قائمة محاذاة الأجسام",
     ["propLabel"] = "الجسم",
     ["propBone"] = "عظم التثبيت",
-    ["animationDict"] = "قاموس الحركة",
-    ["animationClip"] = "مقطع الحركة",
+    ["animationDict"] = "القاموس",
+    ["animationClip"] = "المقطع",
     ["startEditing"] = "بدء التعديل",
     ["propList"] = "الأجسام",
     ["propOffsetTitle"] = "إزاحة الجسم",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "جسيم",
     ["visualizeData"] = "عرض البيانات",
     ["alignmentPosition"] = "موضع المحاذاة",
-    ["baseAnimations"] = "الحركات الأساسية",
+    ["baseAnimations"] = "الحركات",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "حفظ",

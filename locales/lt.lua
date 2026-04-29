@@ -12,8 +12,8 @@ return {
     ["propAlignerTitle"] = "Objektų lygiavimo meniu",
     ["propLabel"] = "Objektas",
     ["propBone"] = "Tvirtinimo kaulas",
-    ["animationDict"] = "Animacijos žodynas",
-    ["animationClip"] = "Animacijos klipas",
+    ["animationDict"] = "Žodynas",
+    ["animationClip"] = "Klipas",
     ["startEditing"] = "Pradėti redagavimą",
     ["propList"] = "Objektai",
     ["propOffsetTitle"] = "Objekto poslinkis",
@@ -60,7 +60,7 @@ return {
     ["particle"] = "Dalelė",
     ["visualizeData"] = "Vizualizuoti duomenis",
     ["alignmentPosition"] = "Lygiavimo pozicija",
-    ["baseAnimations"] = "Pagrindinės animacijos",
+    ["baseAnimations"] = "Animacijos",
 
     -- Alignment Button Instructions
     ["instruct:save"] = "Išsaugoti",
