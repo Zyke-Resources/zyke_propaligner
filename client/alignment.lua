@@ -14,10 +14,121 @@ Alignment = {
 
 Alignment.__index = Alignment
 
+---@param a Vector3Table
+---@param b Vector3Table
+---@return number
+local function vecDot(a, b)
+    return a.x * b.x + a.y * b.y + a.z * b.z
+end
+
+---@param a Quaternion
+---@param b Quaternion
+---@return Quaternion
+local function quatMul(a, b)
+    return {
+        x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+        y = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+        z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+        w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+    }
+end
+
+---@param q Quaternion
+---@return Quaternion
+local function quatConj(q)
+    return { x = -q.x, y = -q.y, z = -q.z, w = q.w }
+end
+
+---@param q Quaternion
+---@return Quaternion
+local function quatNorm(q)
+    local len = math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w)
+    if (len < 1e-6) then return { x = 0.0, y = 0.0, z = 0.0, w = 1.0 } end
+
+    local inv = 1.0 / len
+
+    return { x = q.x * inv, y = q.y * inv, z = q.z * inv, w = q.w * inv }
+end
+
+---@param worldVec Vector3Table
+---@param right Vector3Table
+---@param forward Vector3Table
+---@param up Vector3Table
+---@return Vector3Table
+local function worldToLocalPed(worldVec, pedRight, pedForward, pedUp)
+    return vector3(
+        vecDot(worldVec, pedRight),
+        vecDot(worldVec, pedForward),
+        vecDot(worldVec, pedUp)
+    )
+end
+
+---@param q Quaternion
+---@return Vector3Table right
+---@return Vector3Table forward
+---@return Vector3Table up
+local function quatToMatrix(q)
+    q = quatNorm(q)
+    local xx, yy, zz = q.x * q.x, q.y * q.y, q.z * q.z
+    local xy, xz, yz = q.x * q.y, q.x * q.z, q.y * q.z
+    local wx, wy, wz = q.w * q.x, q.w * q.y, q.w * q.z
+
+    return vector3(1.0 - 2.0 * (yy + zz), 2.0 * (xy + wz), 2.0 * (xz - wy)),
+        vector3(2.0 * (xy - wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz + wx)),
+        vector3(2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy))
+end
+
+---@param right Vector3Table
+---@param forward Vector3Table
+---@param up Vector3Table
+---@return Vector3Table euler XYZ extrinsic angles in degrees
+local function matrixToEuler(right, forward, up)
+    local sinX = math.max(-1.0, math.min(1.0, -up.y))
+    local x = math.asin(sinX)
+
+    local y, z
+    if (math.abs(sinX) < 0.999999) then
+        y = math.atan2(up.x, up.z)
+        z = math.atan2(right.y, forward.y)
+    else
+        y = math.atan2(-right.z, right.x)
+        z = 0.0
+    end
+
+    return vector3(math.deg(x), math.deg(y), math.deg(z))
+end
+
+---@param ex number Rotation around X in degrees
+---@param ey number Rotation around Y in degrees
+---@param ez number Rotation around Z in degrees
+---@return Quaternion Uses YZX extrinsic rotation order (GTA V AttachEntityToEntity convention)
+local function eulerToQuat(ex, ey, ez)
+    local hx, hy, hz = math.rad(ex) * 0.5, math.rad(ey) * 0.5, math.rad(ez) * 0.5
+    local cx, sx = math.cos(hx), math.sin(hx)
+    local cy, sy = math.cos(hy), math.sin(hy)
+    local cz, sz = math.cos(hz), math.sin(hz)
+
+    return quatMul(
+        { x = 0.0, y = sy, z = 0.0, w = cy },
+        quatMul(
+            { x = 0.0, y = 0.0, z = sz, w = cz },
+            { x = sx, y = 0.0, z = 0.0, w = cx }
+        )
+    )
+end
+
 RegisterNUICallback("Eventhandler:moveEntity", function(data, cb)
 	if (not Alignment.active) then return end
 
 	Alignment.active:HandleMoveEntity(data.data, cb)
+end)
+
+RegisterNUICallback("Eventhandler:endDrag", function(data, cb)
+	if (Alignment.active) then
+        Alignment.active._dragSnap = nil
+	end
+
+	cb("ok")
 end)
 
 RegisterNUICallback("Eventhandler:seekAnimation", function(data, cb)
@@ -144,35 +255,38 @@ function Alignment:EnsureProps()
 end
 
 function Alignment:SetGizmoEntity()
+    local ply = PlayerPedId()
+    self._dragSnap = nil
+
     if (self.currMode == "prop") then
+        local prop = self.props[self.propIdx]
+        if (not prop.entity or not DoesEntityExist(prop.entity)) then return end
+
+        local propPos = GetEntityCoords(prop.entity)
+        local qx, qy, qz, qw = GetEntityQuaternion(prop.entity)
+
         SendNUIMessage({
             event = "setGizmoEntity",
             data = {
-                handle = self.props[self.propIdx].entity,
-                position = vector3(
-                    self.props[self.propIdx].offset.z + self.pos.x,
-                    self.props[self.propIdx].offset.y + self.pos.y,
-                    -self.props[self.propIdx].offset.x + self.propRaise
-                ),
-                rotation = vector3(
-                    -self.props[self.propIdx].rotation.x,
-                    self.props[self.propIdx].rotation.z,
-                    self.props[self.propIdx].rotation.y
-                ),
+                handle = prop.entity,
+                position = { x = propPos.x, y = propPos.y, z = propPos.z },
+                quaternion = { x = qx, y = qy, z = qz, w = qw },
                 currMode = self.currMode,
             }
         })
     elseif (self.currMode == "particle") then
+        local prop = self.props[self.propIdx]
+        local particle = prop.particles[self.particleIdx]
+        if (not prop.entity or not DoesEntityExist(prop.entity)) then return end
+
+        local particleWorldPos = GetOffsetFromEntityInWorldCoords(prop.entity, particle.offset.x, particle.offset.y, particle.offset.z)
+
         SendNUIMessage({
             event = "setGizmoEntity",
             data = {
-                handle = self.props[self.propIdx].particles[self.particleIdx].handle,
-                position = vector3(
-                    self.props[self.propIdx].particles[self.particleIdx].offset.z + self.pos.x,
-                    self.props[self.propIdx].particles[self.particleIdx].offset.y + self.pos.y,
-                    -self.props[self.propIdx].particles[self.particleIdx].offset.x + self.propRaise
-                ),
-                rotation = vector3(0.0, 0.0, 0.0), -- Unused
+                handle = particle.handle,
+                position = { x = particleWorldPos.x, y = particleWorldPos.y, z = particleWorldPos.z },
+                quaternion = { x = 0.0, y = 0.0, z = 0.0, w = 1.0 },
                 currMode = self.currMode,
             }
         })
@@ -203,39 +317,92 @@ function Alignment:HighlightCurrent()
     end
 end
 
----@param data {position: Vector3Table, rotation: Vector3Table}
+---@param data {position: Vector3Table, quaternion: {x: number, y: number, z: number, w: number}}
 ---@param cb fun(result: any)
 function Alignment:HandleMoveEntity(data, cb)
-    if (not self.props[self.propIdx]?.entity or not DoesEntityExist(self.props[self.propIdx].entity)) then return end
+    local ply = PlayerPedId()
+    local prop = self.props[self.propIdx]
+    if (not prop.entity or not DoesEntityExist(prop.entity)) then return end
+
+    local desiredWorldPos = vector3(data.position.x, data.position.y, data.position.z)
 
     if (self.currMode == "prop") then
-        -- Some conversions to get the correct values
-        self.props[self.propIdx].offset = vector3(self.propRaise - data.position.z, data.position.y - self.pos.y, data.position.x - self.pos.x)
-        self.props[self.propIdx].rotation = vector3(data.rotation.x, data.rotation.y, data.rotation.z)
+        if (not self._dragSnap) then
+            local snapOffset = vector3(prop.offset.x, prop.offset.y, prop.offset.z)
+            local rx, ry, rz = prop.rotation.x, prop.rotation.y, prop.rotation.z
 
-        local boneIdx = GetPedBoneIndex(PlayerPedId(), self.props[self.propIdx].bone)
+            local propWorldPos = GetEntityCoords(prop.entity)
+            local qx, qy, qz, qw = GetEntityQuaternion(prop.entity)
 
+            local propQ = quatNorm({ x = qx, y = qy, z = qz, w = qw })
+            local rotQ = eulerToQuat(rx, ry, rz)
+            local boneQ = quatMul(propQ, quatConj(rotQ))
+            local boneRight, boneForward, boneUp = quatToMatrix(boneQ)
+
+            self._dragSnap = {
+                worldPos = propWorldPos,
+                worldQuat = { x = qx, y = qy, z = qz, w = qw },
+                offset = snapOffset,
+                rotation = vector3(rx, ry, rz),
+                boneRight = boneRight,
+                boneForward = boneForward,
+                boneUp = boneUp,
+            }
+        end
+
+        local snap = self._dragSnap
+        local worldDelta = desiredWorldPos - snap.worldPos
+        local localDelta = worldToLocalPed(worldDelta, snap.boneRight, snap.boneForward, snap.boneUp)
+        prop.offset = vector3(snap.offset.x + localDelta.x, snap.offset.y + localDelta.y, snap.offset.z + localDelta.z)
+
+        local desiredQ = quatNorm(data.quaternion)
+        local startQ = quatNorm(snap.worldQuat)
+        local deltaQ = quatMul(desiredQ, quatConj(startQ))
+
+        local pedQx, pedQy, pedQz, pedQw = GetEntityQuaternion(ply)
+        local pedQ = quatNorm({ x = pedQx, y = pedQy, z = pedQz, w = pedQw })
+        local localDeltaQ = quatMul(quatConj(pedQ), quatMul(deltaQ, pedQ))
+
+        local dRight, dForward, dUp = quatToMatrix(localDeltaQ)
+        local deltaEuler = matrixToEuler(dRight, dForward, dUp)
+
+        prop.rotation = vector3(snap.rotation.x + deltaEuler.x, snap.rotation.y + deltaEuler.y, snap.rotation.z + deltaEuler.z)
+
+        local boneIdx = GetPedBoneIndex(ply, prop.bone)
         AttachEntityToEntity(
-            self.props[self.propIdx].entity,
-            PlayerPedId(),
+            prop.entity,
+            ply,
             boneIdx,
-            self.props[self.propIdx].offset.x,
-            self.props[self.propIdx].offset.y,
-            self.props[self.propIdx].offset.z,
-            self.props[self.propIdx].rotation.x,
-            self.props[self.propIdx].rotation.y,
-            self.props[self.propIdx].rotation.z,
+            prop.offset.x,
+            prop.offset.y,
+            prop.offset.z,
+            prop.rotation.x,
+            prop.rotation.y,
+            prop.rotation.z,
             true, true, false, true, 1, true
         )
     elseif (self.currMode == "particle") then
-        -- Some conversions to get the correct values
-        self.props[self.propIdx].particles[self.particleIdx].offset = vector3(self.propRaise - data.position.z, data.position.y - self.pos.y, data.position.x - self.pos.x)
+        local particle = prop.particles[self.particleIdx]
+
+        if (not self._dragSnap) then
+            self._dragSnap = {
+                worldPos = GetOffsetFromEntityInWorldCoords(prop.entity, particle.offset.x, particle.offset.y, particle.offset.z),
+                offset = vector3(particle.offset.x, particle.offset.y, particle.offset.z),
+            }
+        end
+
+        local snap = self._dragSnap
+        local worldDelta = desiredWorldPos - snap.worldPos
+
+        local propRight, propForward, propUp = GetEntityMatrix(prop.entity)
+        local localDelta = worldToLocalPed(worldDelta, propRight, propForward, propUp)
+        particle.offset = vector3(snap.offset.x + localDelta.x, snap.offset.y + localDelta.y, snap.offset.z + localDelta.z)
 
         SetParticleFxLoopedOffsets(
-            self.props[self.propIdx].particles[self.particleIdx].handle,
-            self.props[self.propIdx].particles[self.particleIdx].offset.x,
-            self.props[self.propIdx].particles[self.particleIdx].offset.y,
-            self.props[self.propIdx].particles[self.particleIdx].offset.z,
+            particle.handle,
+            particle.offset.x,
+            particle.offset.y,
+            particle.offset.z,
             0.0, 0.0, 0.0
         )
     end
@@ -559,6 +726,7 @@ function Alignment:Enter(data, positionIdx)
                     Wait(1)
                 end
 
+                SendNUIMessage({event = "GizmoBlur"})
                 SetNuiFocus(false, false)
                 SetNuiFocusKeepInput(false)
             end)
@@ -744,13 +912,62 @@ function Alignment:Enter(data, positionIdx)
             self:EnsureParticles()
         end
 
+        local camPos = GetFinalRenderedCamCoord()
+        local camRot = GetFinalRenderedCamRot(1)
+        local pitch = math.rad(camRot.x)
+        local roll = math.rad(camRot.y)
+        local yaw = math.rad(camRot.z)
+        local cP, sP = math.cos(pitch), math.sin(pitch)
+        local cR, sR = math.cos(roll), math.sin(roll)
+        local cY, sY = math.cos(yaw), math.sin(yaw)
+
+        local camForward = vector3(
+            -cR * sY * cP + sR * sP,
+            cY * cP,
+            sR * sY * cP + cR * sP
+        )
+
+        local camUp = vector3(
+            cR * sY * sP + sR * cP,
+            -cY * sP,
+            -sR * sY * sP + cR * cP
+        )
+
+        local camFov = GetFinalRenderedCamFov()
+
         SendNUIMessage({
             event = "setCameraPosition",
             data = {
-                position = GetFinalRenderedCamCoord(),
-                rotation = GetFinalRenderedCamRot(0)
+                position = camPos,
+                forward = camForward,
+                up = camUp,
+                fov = camFov,
             }
         })
+
+        if (self.currMode == "prop" and self.props[self.propIdx].entity and DoesEntityExist(self.props[self.propIdx].entity)) then
+            local propPos = GetEntityCoords(self.props[self.propIdx].entity)
+            local qx, qy, qz, qw = GetEntityQuaternion(self.props[self.propIdx].entity)
+
+            SendNUIMessage({
+                event = "syncGizmoTransform",
+                data = {
+                    position = { x = propPos.x, y = propPos.y, z = propPos.z },
+                    quaternion = { x = qx, y = qy, z = qz, w = qw },
+                }
+            })
+        elseif (self.currMode == "particle" and self.props[self.propIdx].entity and DoesEntityExist(self.props[self.propIdx].entity)) then
+            local particle = self.props[self.propIdx].particles[self.particleIdx]
+            local particleWorldPos = GetOffsetFromEntityInWorldCoords(self.props[self.propIdx].entity, particle.offset.x, particle.offset.y, particle.offset.z)
+
+            SendNUIMessage({
+                event = "syncGizmoTransform",
+                data = {
+                    position = { x = particleWorldPos.x, y = particleWorldPos.y, z = particleWorldPos.z },
+                    quaternion = { x = 0.0, y = 0.0, z = 0.0, w = 1.0 },
+                }
+            })
+        end
 
         -- Disable idle stuff
         DisableIdleCamera(true)

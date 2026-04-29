@@ -42,6 +42,7 @@
 
 ---@alias OsTime integer
 ---@alias Vector3Table table{x: number, y: number, z: number}
+---@alias Quaternion table{x: number, y: number, z: number, w: number}
 ---@alias Vector3Array [number, number, number]
 ---@alias PlayerId integer
 ---@alias Success boolean
