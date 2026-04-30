@@ -117,6 +117,28 @@ local function eulerToQuat(ex, ey, ez)
     )
 end
 
+---@param q Quaternion
+---@return number rx Rotation around X in degrees
+---@return number ry Rotation around Y in degrees
+---@return number rz Rotation around Z in degrees
+local function quatToEulerYZX(q)
+    local right, forward, up = quatToMatrix(q)
+
+    local sinRz = math.max(-1.0, math.min(1.0, right.y))
+    local rz = math.asin(sinRz)
+
+    local rx, ry
+    if (math.abs(sinRz) < 0.999999) then
+        ry = math.atan2(-right.z, right.x)
+        rx = math.atan2(-up.y, forward.y)
+    else
+        ry = math.atan2(up.x, up.z)
+        rx = 0.0
+    end
+
+    return math.deg(rx), math.deg(ry), math.deg(rz)
+end
+
 RegisterNUICallback("Eventhandler:moveEntity", function(data, cb)
 	if (not Alignment.active) then return end
 
@@ -341,9 +363,8 @@ function Alignment:HandleMoveEntity(data, cb)
 
             self._dragSnap = {
                 worldPos = propWorldPos,
-                worldQuat = { x = qx, y = qy, z = qz, w = qw },
                 offset = snapOffset,
-                rotation = vector3(rx, ry, rz),
+                boneQ = boneQ,
                 boneRight = boneRight,
                 boneForward = boneForward,
                 boneUp = boneUp,
@@ -356,17 +377,9 @@ function Alignment:HandleMoveEntity(data, cb)
         prop.offset = vector3(snap.offset.x + localDelta.x, snap.offset.y + localDelta.y, snap.offset.z + localDelta.z)
 
         local desiredQ = quatNorm(data.quaternion)
-        local startQ = quatNorm(snap.worldQuat)
-        local deltaQ = quatMul(desiredQ, quatConj(startQ))
-
-        local pedQx, pedQy, pedQz, pedQw = GetEntityQuaternion(ply)
-        local pedQ = quatNorm({ x = pedQx, y = pedQy, z = pedQz, w = pedQw })
-        local localDeltaQ = quatMul(quatConj(pedQ), quatMul(deltaQ, pedQ))
-
-        local dRight, dForward, dUp = quatToMatrix(localDeltaQ)
-        local deltaEuler = matrixToEuler(dRight, dForward, dUp)
-
-        prop.rotation = vector3(snap.rotation.x + deltaEuler.x, snap.rotation.y + deltaEuler.y, snap.rotation.z + deltaEuler.z)
+        local newRotQ = quatMul(quatConj(snap.boneQ), desiredQ)
+        local rx, ry, rz = quatToEulerYZX(newRotQ)
+        prop.rotation = vector3(rx, ry, rz)
 
         local boneIdx = GetPedBoneIndex(ply, prop.bone)
         AttachEntityToEntity(

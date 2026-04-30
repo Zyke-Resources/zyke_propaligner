@@ -81,6 +81,7 @@ export const TransformComponent = () => {
 
     useFrame(() => {
         if (!mesh.current || isDragging.current) return;
+
         if (editorModeRef.current === "translate") {
             _camRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
             _basisRight.set(_camRight.x, 0, _camRight.z);
@@ -91,6 +92,14 @@ export const TransformComponent = () => {
             _basisForward.crossVectors(_basisRight, _basisUp).normalize();
             _basisMatrix.makeBasis(_basisRight, _basisUp, _basisForward);
             mesh.current.quaternion.setFromRotationMatrix(_basisMatrix);
+        }
+
+        if (editorModeRef.current === "rotate" && controls.current) {
+            controls.current.traverse((child: any) => {
+                if (child.name === 'E' || child.name === 'XYZE') {
+                    child.visible = false;
+                }
+            });
         }
     });
 
