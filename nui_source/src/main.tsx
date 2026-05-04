@@ -9,6 +9,7 @@ import "./styling/text.css";
 import "./styling/progress.css";
 import "./styling/pagination.css";
 import "./styling/kbd.css";
+import "./styling/tooltip.css";
 import App from "./components/App";
 import EnsureLoader from "./context/EnsureLoader";
 

@@ -33,6 +33,8 @@ interface PropAlignmentsProps {
     bones: Bone[];
     tempId: number;
     particles: ParticleAlignmentData[] | null;
+    showStarterTooltip?: boolean;
+    onStarterTooltipDismiss?: () => void;
 }
 
 const PropAlignments: React.FC<PropAlignmentsProps> = ({
@@ -46,11 +48,15 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
     bones,
     tempId,
     particles,
+    showStarterTooltip,
+    onStarterTooltipDismiss,
 }) => {
     const T = useTranslation();
     const [propModelChange] = useDebouncedValue(prop, 500);
     const [modelValid, setModelValid] = useState<boolean>(true);
     const [hovering, setHovering] = useState<boolean>(false);
+    const [hasStarterTooltipHoverEnded, setHasStarterTooltipHoverEnded] =
+        useState<boolean>(false);
     const firstRender = useRef(true);
 
     const { openModal, closeModal } = useModalContext();
@@ -92,6 +98,12 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
         );
     }, [propModelChange]);
 
+    useEffect(() => {
+        if (!showStarterTooltip) {
+            setHasStarterTooltipHoverEnded(false);
+        }
+    }, [showStarterTooltip]);
+
     const makePrimary = () => {
         if (idx === 0) return;
 
@@ -119,9 +131,26 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
     return (
         <>
             <Button
-                onClick={() => openModal(modalId)}
+                onClick={() => {
+                    onStarterTooltipDismiss?.();
+                    openModal(modalId);
+                }}
                 onMouseEnter={() => setHovering(true)}
-                onMouseLeave={() => setHovering(false)}
+                onMouseLeave={() => {
+                    setHovering(false);
+
+                    if (showStarterTooltip) {
+                        setHasStarterTooltipHoverEnded(true);
+                    }
+                }}
+                tooltipLabel={showStarterTooltip ? "Click to edit" : undefined}
+                tooltipOpened={
+                    showStarterTooltip && !hasStarterTooltipHoverEnded
+                        ? true
+                        : undefined
+                }
+                tooltipWithArrow
+                tooltipPosition="bottom"
                 buttonStyling={{
                     width: "100%",
                 }}

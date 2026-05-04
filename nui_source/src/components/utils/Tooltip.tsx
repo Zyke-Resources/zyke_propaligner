@@ -3,7 +3,8 @@ import { Tooltip as MantineTooltip } from "@mantine/core";
 interface TooltipProps {
     disabled?: boolean;
     label?: string | undefined;
-    children: React.ReactNode;
+    opened?: boolean;
+    children: React.ReactElement;
     withArrow?: boolean;
     position?:
         | "bottom"
@@ -23,6 +24,7 @@ interface TooltipProps {
 const Tooltip: React.FC<TooltipProps> = ({
     disabled,
     label,
+    opened,
     children,
     withArrow,
     position,
@@ -33,17 +35,17 @@ const Tooltip: React.FC<TooltipProps> = ({
                 !disabled ? (
                     <MantineTooltip
                         label={label}
+                        opened={opened}
                         withArrow={withArrow}
-                        arrowSize={11}
+                        arrowSize={12}
                         position={position}
                         multiline
                         style={{
-                            width: "fit-content",
                             maxWidth: "220px",
                             textAlign: "center",
                         }}
                     >
-                        <div>{children}</div>
+                        {children}
                     </MantineTooltip>
                 ) : (
                     <>{children}</>

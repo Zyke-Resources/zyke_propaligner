@@ -1,0 +1,15 @@
+.mantine-Tooltip-tooltip {
+    font-family: var(--font);
+    background: rgb(var(--grey));
+    font-size: 1.2rem;
+
+    box-shadow: 0 0 3px 0 rgba(0, 0, 0.5);
+    border: 1px solid rgb(var(--grey4));
+    border-radius: var(--lborderRadius);
+    color: rgb(var(--text));
+}
+
+.mantine-Tooltip-arrow {
+    box-sizing: border-box;
+    border: 1px solid rgb(var(--grey4));
+}

@@ -14,6 +14,21 @@ export interface ButtonProps {
     rightIcon?: "dialog" | "newPage" | "confirm";
     useRightIconAnimation?: boolean;
     tooltipLabel?: string | undefined;
+    tooltipOpened?: boolean;
+    tooltipWithArrow?: boolean;
+    tooltipPosition?:
+        | "bottom"
+        | "left"
+        | "right"
+        | "top"
+        | "bottom-end"
+        | "bottom-start"
+        | "left-end"
+        | "left-start"
+        | "right-end"
+        | "right-start"
+        | "top-end"
+        | "top-start";
     disableRipple?: boolean;
 
     hollow?: boolean;
@@ -49,6 +64,9 @@ const Button: React.FC<ButtonProps> = ({
     rightIcon,
     useRightIconAnimation,
     tooltipLabel,
+    tooltipOpened,
+    tooltipWithArrow,
+    tooltipPosition,
     disableRipple = false,
 
     hollow = false,
@@ -112,7 +130,12 @@ const Button: React.FC<ButtonProps> = ({
     };
 
     return (
-        <Tooltip label={tooltipLabel}>
+        <Tooltip
+            label={tooltipLabel}
+            opened={tooltipOpened}
+            withArrow={tooltipWithArrow}
+            position={tooltipPosition}
+        >
             <MUIButton
                 disableRipple={disableRipple}
                 variant="contained"

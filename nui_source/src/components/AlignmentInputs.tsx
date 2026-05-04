@@ -51,6 +51,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
     const [debouncedPropEditing] = useDebouncedValue(editingData.props, 500);
     const [hasInvalidModels, setHasInvalidModels] = useState(true);
     const [displayBackButton, setDisplayBackButton] = useState(false); // When using the script via another menu, to avoid confusion we display a new button to save & go back
+    const [showStarterTooltip, setShowStarterTooltip] = useState(false);
     const isFirstRender = useRef(true);
 
     const handleForm = (e?: React.FormEvent<HTMLFormElement>): void => {
@@ -160,6 +161,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
         // Create a base prop & open it
         if (editingData.props.length === 0) {
             addbaseProp();
+            setShowStarterTooltip(true);
         }
     };
 
@@ -203,6 +205,16 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
     useEffect(() => {
         editingDataRef.current = editingData;
     }, [editingData]);
+
+    useEffect(() => {
+        if (
+            showStarterTooltip &&
+            (editingData.props.length !== 1 ||
+                editingData.props[0]?.prop.length > 0)
+        ) {
+            setShowStarterTooltip(false);
+        }
+    }, [editingData.props, showStarterTooltip]);
 
     useEffect(() => {
         send("AlignmentMenuMounted");
@@ -281,6 +293,8 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                     bones={bones}
                     addbaseProp={addbaseProp}
                     hasInvalidModels={hasInvalidModels}
+                    showStarterTooltip={showStarterTooltip}
+                    onStarterTooltipDismiss={() => setShowStarterTooltip(false)}
                 />
 
                 <div

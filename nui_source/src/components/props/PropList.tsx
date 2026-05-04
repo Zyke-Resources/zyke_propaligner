@@ -12,6 +12,8 @@ interface PropListProps {
     bones: Bone[];
     addbaseProp: () => Promise<void>;
     hasInvalidModels: boolean;
+    showStarterTooltip: boolean;
+    onStarterTooltipDismiss: () => void;
 }
 
 const PropList: React.FC<PropListProps> = ({
@@ -20,6 +22,8 @@ const PropList: React.FC<PropListProps> = ({
     bones,
     addbaseProp,
     hasInvalidModels,
+    showStarterTooltip,
+    onStarterTooltipDismiss,
 }) => {
     const T = useTranslation();
 
@@ -35,6 +39,13 @@ const PropList: React.FC<PropListProps> = ({
                         setEditingData={setEditingData}
                         totalProps={editingData.props.length}
                         bones={bones}
+                        showStarterTooltip={
+                            showStarterTooltip &&
+                            idx === 0 &&
+                            editingData.props.length === 1 &&
+                            prop.prop.length === 0
+                        }
+                        onStarterTooltipDismiss={onStarterTooltipDismiss}
                     />
                 ))}
             </div>
