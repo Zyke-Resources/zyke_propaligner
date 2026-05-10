@@ -322,7 +322,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                         <Button
                             wide
                             icon={<KeyboardReturnIcon />}
-                            color="var(--grey4)"
+                            color="var(--green3)"
                             onClick={() =>
                                 send("CloseMenu", undefined, undefined)
                             }
