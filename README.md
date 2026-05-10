@@ -108,6 +108,81 @@ You can paste these presets into the import input, press the import button and t
 }
 ```
 
+## Resource Integration Example
+
+Use `ConfigureAlignments` when another resource should open propaligner, let the player edit the data, and receive the edited result back.
+
+```lua
+local alignment = {
+    dict = "amb@world_human_aa_smoke@male@idle_a",
+    clip = "idle_a",
+    props = {
+        {
+            prop = "ng_proc_cigarette01a",
+            bone = 64097,
+            offset = {x = 0.02, y = 0.02, z = -0.008},
+            rotation = {x = 100.0, y = 0.0, z = 100.0},
+            particles = {
+                {
+                    dict = "scr_recartheft",
+                    clip = "scr_wheel_burnout",
+                    offset = {x = -0.068, y = 0.0, z = 0.0},
+                    size = 0.03
+                }
+            }
+        }
+    }
+}
+
+local result = exports["zyke_propaligner"]:ConfigureAlignments(alignment, true)
+if (not result) then return end
+
+print(json.encode(result))
+```
+
+### Restricting Fields
+
+If a value should be displayed but edited somewhere else in your resource, pass `restrictedFields`. The field stays visible, but the input is disabled and shows your tooltip on hover.
+
+```lua
+local result = exports["zyke_propaligner"]:ConfigureAlignments({
+    dict = "amb@world_human_aa_smoke@male@idle_a",
+    clip = "idle_a",
+    props = {
+        {
+            prop = "ng_proc_cigarette01a",
+            bone = 64097,
+            offset = {x = 0.02, y = 0.02, z = -0.008},
+            rotation = {x = 100.0, y = 0.0, z = 100.0},
+            particles = {
+                {
+                    dict = "scr_recartheft",
+                    clip = "scr_wheel_burnout",
+                    offset = {x = -0.068, y = 0.0, z = 0.0},
+                    size = 0.03
+                }
+            }
+        }
+    },
+    restrictedFields = {
+        ["particles.size"] = {
+            disabled = true,
+            tooltip = "Particle size is controlled by the smoking item settings."
+        }
+    }
+}, true)
+```
+
+`restrictedFields` also accepts shorthand values:
+
+```lua
+restrictedFields = {
+    ["particles.size"] = "Edit this in your own menu instead.",
+}
+```
+
+Restrictions are resolved by field path. A specific key such as `particles.size` only affects that field, while a broader key such as `particles` can be used by any particle input that supports restrictions. More specific keys override broader ones.
+
 ## Showcase
 
 <img src="https://github.com/user-attachments/assets/9d91ec51-8fb7-40cb-bf23-59148d8c36f0" style="width: 800px; height: auto;">

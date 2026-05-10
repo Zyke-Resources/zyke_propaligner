@@ -10,6 +10,8 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import FlareIcon from "@mui/icons-material/Flare";
 import DebouncedTextInput from "../utils/DebouncedTextInput";
 import TagIcon from "@mui/icons-material/Tag";
+import Tooltip from "../utils/Tooltip";
+import { useFieldRestriction } from "../../context/FieldRestrictions";
 
 interface ParticleProps {
     idx: number;
@@ -30,6 +32,7 @@ const Particle: React.FC<ParticleProps> = ({
 }) => {
     const T = useTranslation();
     const accValue = `particle-${idx}`;
+    const sizeRestriction = useFieldRestriction("particles.size");
 
     const deleteParticle = async () => {
         if (accOpen === accValue) {
@@ -171,18 +174,26 @@ const Particle: React.FC<ParticleProps> = ({
                             })
                         }
                     />
-                    <NumberInput
-                        icon={<ZoomOutMapIcon />}
-                        label={T("particleSize")}
-                        value={particle.size}
-                        precision={3}
-                        hideControls
-                        onChange={(e) =>
-                            setParticleData({
-                                size: e,
-                            })
-                        }
-                    />
+                    <Tooltip
+                        label={sizeRestriction.tooltip}
+                        disabled={!sizeRestriction.disabled}
+                    >
+                        <div>
+                            <NumberInput
+                                icon={<ZoomOutMapIcon />}
+                                label={T("particleSize")}
+                                value={particle.size}
+                                precision={3}
+                                hideControls
+                                disabled={sizeRestriction.disabled}
+                                onChange={(e) =>
+                                    setParticleData({
+                                        size: e,
+                                    })
+                                }
+                            />
+                        </div>
+                    </Tooltip>
                 </div>
 
                 {/* Offset */}

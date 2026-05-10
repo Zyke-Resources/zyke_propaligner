@@ -3,7 +3,11 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import CropRotateIcon from "@mui/icons-material/CropRotate";
 import { useTranslation } from "../../context/Translation";
 import NumberInput from "../utils/NumberInput";
-import { AlignmentData, Bone, ParticleAlignmentData } from "../../types";
+import {
+    AlignmentData,
+    Bone,
+    ParticleAlignmentData,
+} from "../../types";
 import TextInput from "../utils/TextInput";
 import { FaBox } from "react-icons/fa6";
 import { useDebouncedValue } from "@mantine/hooks";

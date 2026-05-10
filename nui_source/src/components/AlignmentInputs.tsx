@@ -24,6 +24,7 @@ import Select from "./utils/Select";
 import { useConfig } from "../context/ConfigContext";
 import MapIcon from "@mui/icons-material/Map";
 import { Animation } from "./MainMenu";
+import { FieldRestrictionsProvider } from "../context/FieldRestrictions";
 
 interface LocalProps {
     bones: Bone[];
@@ -40,6 +41,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
         dict: "",
         clip: "",
         props: [],
+        restrictedFields: {},
     });
     const [alignmentPosition, setAlignmentPosition] = useState<string>(
         config.Settings.alignmentPosition[0].name
@@ -80,6 +82,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
 
             setEditingData({
                 ...rest,
+                restrictedFields: rest.restrictedFields || {},
                 props: rest.props.map((item) => ({
                     ...item,
                     tempId: Math.floor(Math.random() * 1000000),
@@ -99,13 +102,11 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
             setEditingData({
                 dict: data.data.dict,
                 clip: data.data.clip,
-                props: data.data.props.map((item) =>
-                // item.tempId ? { ...item, tempId: Math.random() } : item
-                ({
+                props: data.data.props.map((item) => ({
                     ...item,
                     tempId: Math.floor(Math.random() * 1000000),
-                })
-                ),
+                })),
+                restrictedFields: data.data.restrictedFields || {},
             });
         }, 100);
     };
@@ -188,6 +189,7 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                 ...prev,
                 dict: data.dict,
                 clip: data.clip,
+                restrictedFields: data.restrictedFields || {},
                 props: (data.props.length > 0 ? data.props : prev.props).map(
                     (item) => ({
                         ...item,
@@ -281,21 +283,27 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                     />
                 </div>
 
-                <AnimationSection
-                    editingData={editingData}
-                    setEditingData={setEditingData}
-                    animations={animations}
-                />
+                <FieldRestrictionsProvider
+                    restrictedFields={editingData.restrictedFields}
+                >
+                    <AnimationSection
+                        editingData={editingData}
+                        setEditingData={setEditingData}
+                        animations={animations}
+                    />
 
-                <PropList
-                    editingData={editingData}
-                    setEditingData={setEditingData}
-                    bones={bones}
-                    addbaseProp={addbaseProp}
-                    hasInvalidModels={hasInvalidModels}
-                    showStarterTooltip={showStarterTooltip}
-                    onStarterTooltipDismiss={() => setShowStarterTooltip(false)}
-                />
+                    <PropList
+                        editingData={editingData}
+                        setEditingData={setEditingData}
+                        bones={bones}
+                        addbaseProp={addbaseProp}
+                        hasInvalidModels={hasInvalidModels}
+                        showStarterTooltip={showStarterTooltip}
+                        onStarterTooltipDismiss={() =>
+                            setShowStarterTooltip(false)
+                        }
+                    />
+                </FieldRestrictionsProvider>
 
                 <div
                     style={{

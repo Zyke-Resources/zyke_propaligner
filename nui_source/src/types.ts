@@ -11,10 +11,19 @@ export interface ParticleAlignmentData {
     size: number;
 }
 
+export type FieldRestriction =
+    | boolean
+    | string
+    | {
+          disabled?: boolean;
+          tooltip?: string;
+      };
+
 export interface AlignmentData {
     dict: string;
     clip: string;
     props: PropAlignmentData[];
+    restrictedFields?: Record<string, FieldRestriction>;
     created?: number; // Saved in database and may exist, but not used in the alignment
 }
 
