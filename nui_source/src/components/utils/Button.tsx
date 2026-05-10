@@ -129,6 +129,138 @@ const Button: React.FC<ButtonProps> = ({
         }
     };
 
+    const button = (
+        <MUIButton
+            disableRipple={disableRipple}
+            variant="contained"
+            onClick={_onClick}
+            disabled={isClickDisabled}
+            sx={{
+                // Centering
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+
+                // Text Stuff
+                textTransform: "none",
+
+                // Width & Sizing Stuff
+                padding: "0.35rem 0.45rem 0.35rem 0.6rem !important",
+                minPadding: "0 0 0 0 !important",
+                boxSizing: "border-box",
+
+                margin: "0.5rem 0 0 0",
+                minHeight: "0 !important",
+                minWidth: "0 !important",
+                width: wide ? "100%" : "fit-content",
+                height: "fit-content",
+                borderRadius: "var(--mborderRadius)",
+
+                // Colors
+                background: `${backgroundColor} !important`,
+                border: `1px solid ${borderColor.hex()} !important`,
+
+                // Hover Main Button Div Styling
+                ["&:hover"]: {
+                    background: !isClickDisabled
+                        ? `${hoverValue} !important`
+                        : undefined,
+
+                    // When Hovering Main, Right Icon Styling
+                    ["& .rightIcon"]: {
+                        transform: useRightIconAnimation
+                            ? "translateX(35%)"
+                            : undefined,
+                    },
+                },
+
+                // Right Icon Styling
+                ["& .rightIcon"]: {
+                    transform: !useRightIconAnimation
+                        ? "translateX(35%)"
+                        : undefined,
+                    marginRight: "1rem",
+                },
+
+                ...buttonStyling,
+            }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+
+                    // Icon Styling
+                    "& svg": {
+                        marginRight: "0.5rem",
+                        fontSize: "1.5rem",
+                        color: `${textColor.hex()}`,
+                        fill: `${textColor.hex()}`,
+                        transition: "all 0.2s ease-in-out",
+                        ...iconStyling,
+                    },
+
+                    // Text Styling
+                    "& p": {
+                        color: `${textColor.hex()}`,
+                        fontSize: "1.4rem",
+                        margin: "0rem 0.2rem 0 0",
+                        fontWeight: hollow ? "400" : "400",
+                        transition: "all 0.2s ease-in-out",
+                        ...textStyling,
+                    },
+
+                    ...boxStyling,
+                }}
+            >
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: wide ? "center" : "start",
+                        width: "100%",
+
+                        ...textContainerStyling,
+                    }}
+                >
+                    {icon && (
+                        <LeftIcon
+                            icon={icon}
+                            color={textColor.hex()}
+                            loading={isLoading}
+                        />
+                    )}
+                    {removeDefaultComponent ? children : <p>{children}</p>}
+                </Box>
+                {rightIcon && rightIcons[rightIcon]}
+            </Box>
+        </MUIButton>
+    );
+
+    if (isClickDisabled && tooltipLabel) {
+        return (
+            <Tooltip
+                label={tooltipLabel}
+                opened={tooltipOpened}
+                withArrow={tooltipWithArrow}
+                position={tooltipPosition}
+            >
+                <span
+                    style={{
+                        display: wide ? "block" : "inline-flex",
+                        width: wide ? "100%" : "fit-content",
+                    }}
+                >
+                    {button}
+                </span>
+            </Tooltip>
+        );
+    }
+
     return (
         <Tooltip
             label={tooltipLabel}
@@ -136,115 +268,7 @@ const Button: React.FC<ButtonProps> = ({
             withArrow={tooltipWithArrow}
             position={tooltipPosition}
         >
-            <MUIButton
-                disableRipple={disableRipple}
-                variant="contained"
-                onClick={_onClick}
-                disabled={isClickDisabled}
-                sx={{
-                    // Centering
-                    display: "flex",
-                    justifyContent: "start",
-                    alignItems: "center",
-
-                    // Text Stuff
-                    textTransform: "none",
-
-                    // Width & Sizing Stuff
-                    padding: "0.35rem 0.45rem 0.35rem 0.6rem !important",
-                    minPadding: "0 0 0 0 !important",
-                    boxSizing: "border-box",
-
-                    margin: "0.5rem 0 0 0",
-                    minHeight: "0 !important",
-                    minWidth: "0 !important",
-                    width: wide ? "100%" : "fit-content",
-                    height: "fit-content",
-                    borderRadius: "var(--mborderRadius)",
-
-                    // Colors
-                    background: `${backgroundColor} !important`,
-                    border: `1px solid ${borderColor.hex()} !important`,
-
-                    // Hover Main Button Div Styling
-                    ["&:hover"]: {
-                        background: !isClickDisabled
-                            ? `${hoverValue} !important`
-                            : undefined,
-
-                        // When Hovering Main, Right Icon Styling
-                        ["& .rightIcon"]: {
-                            transform: useRightIconAnimation
-                                ? "translateX(35%)"
-                                : undefined,
-                        },
-                    },
-
-                    // Right Icon Styling
-                    ["& .rightIcon"]: {
-                        transform: !useRightIconAnimation
-                            ? "translateX(35%)"
-                            : undefined,
-                        marginRight: "1rem",
-                    },
-
-                    ...buttonStyling,
-                }}
-                onMouseEnter={onMouseEnter}
-                onMouseLeave={onMouseLeave}
-            >
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-
-                        // Icon Styling
-                        "& svg": {
-                            marginRight: "0.5rem",
-                            fontSize: "1.5rem",
-                            color: `${textColor.hex()}`,
-                            fill: `${textColor.hex()}`,
-                            transition: "all 0.2s ease-in-out",
-                            ...iconStyling,
-                        },
-
-                        // Text Styling
-                        "& p": {
-                            color: `${textColor.hex()}`,
-                            fontSize: "1.4rem",
-                            margin: "0rem 0.2rem 0 0",
-                            fontWeight: hollow ? "400" : "400",
-                            transition: "all 0.2s ease-in-out",
-                            ...textStyling,
-                        },
-
-                        ...boxStyling,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: wide ? "center" : "start",
-                            width: "100%",
-
-                            ...textContainerStyling,
-                        }}
-                    >
-                        {icon && (
-                            <LeftIcon
-                                icon={icon}
-                                color={textColor.hex()}
-                                loading={isLoading}
-                            />
-                        )}
-                        {removeDefaultComponent ? children : <p>{children}</p>}
-                    </Box>
-                    {rightIcon && rightIcons[rightIcon]}
-                </Box>
-            </MUIButton>
+            {button}
         </Tooltip>
     );
 };

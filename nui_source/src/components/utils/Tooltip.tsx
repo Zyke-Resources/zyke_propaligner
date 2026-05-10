@@ -39,6 +39,8 @@ const Tooltip: React.FC<TooltipProps> = ({
                         withArrow={withArrow}
                         arrowSize={12}
                         position={position}
+                        withinPortal
+                        zIndex={10000}
                         multiline
                         style={{
                             maxWidth: "220px",
