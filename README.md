@@ -181,6 +181,17 @@ restrictedFields = {
 }
 ```
 
+Collection fields can also restrict how many entries can be added:
+
+```lua
+restrictedFields = {
+    ["particles"] = {
+        maxCount = 1,
+        tooltip = "Smoking particles only support one particle."
+    }
+}
+```
+
 Restrictions are resolved by field path. A specific key such as `particles.size` only affects that field, while a broader key such as `particles` can be used by any particle input that supports restrictions. More specific keys override broader ones.
 
 ## Showcase

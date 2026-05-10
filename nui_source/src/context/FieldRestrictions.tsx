@@ -4,6 +4,7 @@ import { FieldRestriction } from "../types";
 export interface ResolvedFieldRestriction {
     disabled: boolean;
     tooltip?: string;
+    maxCount?: number;
 }
 
 const FieldRestrictionsContext = createContext<
@@ -26,8 +27,12 @@ const normalizeRestriction = (
     }
 
     return {
-        disabled: restriction.disabled !== false,
+        disabled:
+            restriction.disabled !== undefined
+                ? restriction.disabled
+                : restriction.maxCount === undefined,
         tooltip: restriction.tooltip,
+        maxCount: restriction.maxCount,
     };
 };
 

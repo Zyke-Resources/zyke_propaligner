@@ -6,6 +6,7 @@ import { Accordion } from "@mantine/core";
 import Button from "../utils/Button";
 import AddIcon from "@mui/icons-material/Add";
 import Particle from "./Particle";
+import { useFieldRestriction } from "../../context/FieldRestrictions";
 
 interface ParticleSectionProps {
     setEditingData: React.Dispatch<React.SetStateAction<AlignmentData>>;
@@ -20,12 +21,27 @@ const ParticleSection: React.FC<ParticleSectionProps> = ({
 }) => {
     const T = useTranslation();
     const [accOpen, setAccOpen] = useState<string | null>(null);
+    const particleRestriction = useFieldRestriction("particles");
+    const particleCount = particles?.length || 0;
+    const hasReachedMaxParticles =
+        particleRestriction.maxCount !== undefined &&
+        particleCount >= particleRestriction.maxCount;
+    const addParticleDisabled =
+        particleRestriction.disabled || hasReachedMaxParticles;
 
     const addBaseParticle = async () => {
         setEditingData((prev) => ({
             ...prev,
             props: prev.props.map((prop, idx) => {
                 if (idx === propIdx) {
+                    if (
+                        particleRestriction.maxCount !== undefined &&
+                        (prop.particles?.length || 0) >=
+                            particleRestriction.maxCount
+                    ) {
+                        return prop;
+                    }
+
                     return {
                         ...prop,
                         particles: [
@@ -75,7 +91,12 @@ const ParticleSection: React.FC<ParticleSectionProps> = ({
                     color="rgba(var(--blue2))"
                     icon={<AddIcon />}
                     onClick={async () => await addBaseParticle()}
-                    // disabled={hasInvalidModels}
+                    disabled={addParticleDisabled}
+                    tooltipLabel={
+                        addParticleDisabled
+                            ? particleRestriction.tooltip
+                            : undefined
+                    }
                 >
                     {T("addParticle")}
                 </Button>

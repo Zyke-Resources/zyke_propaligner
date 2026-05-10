@@ -2,7 +2,7 @@
 ---@field dict string
 ---@field clip string
 ---@field props PropAlignmentData[]
----@field restrictedFields? table<string, boolean | string | {disabled: boolean?, tooltip: string?}>
+---@field restrictedFields? table<string, boolean | string | {disabled: boolean?, tooltip: string?, maxCount: number?}>
 
 ---@class ParticleAlignmentData
 ---@field dict string

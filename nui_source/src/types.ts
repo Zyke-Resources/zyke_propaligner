@@ -17,6 +17,7 @@ export type FieldRestriction =
     | {
           disabled?: boolean;
           tooltip?: string;
+          maxCount?: number;
       };
 
 export interface AlignmentData {
