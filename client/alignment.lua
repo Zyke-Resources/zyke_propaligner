@@ -587,6 +587,7 @@ end
 ---@return {offset: Vector3Table, rotation: Vector3Table}[] | nil, FailReason?
 function Alignment:Enter(data, positionIdx)
     self = setmetatable({}, Alignment)
+    self.restrictedFields = data.restrictedFields
 
     -- First, validate the data input
     for i = 1, #data.props do
@@ -1049,9 +1050,12 @@ function Alignment:Enter(data, positionIdx)
         dict = self.anim.dict,
         clip = self.anim.clip,
         props = self.props,
+        restrictedFields = self.restrictedFields,
     }
 
-    AddToHistory(retVal)
+    local historyData = Z.table.copy(retVal)
+    historyData.restrictedFields = nil
+    AddToHistory(historyData)
 
     SetAlignmentData(retVal, "prev")
     SendNUIMessage({event = "SetSuspension", data = false})

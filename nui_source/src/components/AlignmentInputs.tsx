@@ -31,6 +31,16 @@ interface LocalProps {
     animations: Animation[];
 }
 
+const getActiveRestrictions = (
+    current?: AlignmentData["restrictedFields"],
+    next?: AlignmentData["restrictedFields"]
+) => {
+    if (current && Object.keys(current).length > 0) return current;
+    if (next && Object.keys(next).length > 0) return next;
+
+    return {};
+};
+
 const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
     const T = useTranslation();
     const config = useConfig();
@@ -80,14 +90,17 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
 
             const { created, ...rest } = data;
 
-            setEditingData({
+            setEditingData((prev) => ({
                 ...rest,
-                restrictedFields: rest.restrictedFields || {},
+                restrictedFields: getActiveRestrictions(
+                    prev.restrictedFields,
+                    rest.restrictedFields
+                ),
                 props: rest.props.map((item) => ({
                     ...item,
                     tempId: Math.floor(Math.random() * 1000000),
                 })),
-            });
+            }));
         }, 100);
     };
 
@@ -99,15 +112,18 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
 
         setTimeout(() => {
             setLoading(false);
-            setEditingData({
+            setEditingData((prev) => ({
                 dict: data.data.dict,
                 clip: data.data.clip,
                 props: data.data.props.map((item) => ({
                     ...item,
                     tempId: Math.floor(Math.random() * 1000000),
                 })),
-                restrictedFields: data.data.restrictedFields || {},
-            });
+                restrictedFields: getActiveRestrictions(
+                    prev.restrictedFields,
+                    data.data.restrictedFields
+                ),
+            }));
         }, 100);
     };
 
@@ -189,7 +205,13 @@ const AlignmentInputs: React.FC<LocalProps> = ({ bones, animations }) => {
                 ...prev,
                 dict: data.dict,
                 clip: data.clip,
-                restrictedFields: data.restrictedFields || {},
+                restrictedFields:
+                    backButton === "prev"
+                        ? getActiveRestrictions(
+                              data.restrictedFields,
+                              prev.restrictedFields
+                          )
+                        : data.restrictedFields || {},
                 props: (data.props.length > 0 ? data.props : prev.props).map(
                     (item) => ({
                         ...item,
