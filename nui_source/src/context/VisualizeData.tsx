@@ -1,11 +1,10 @@
-import React, { createContext, useContext, ReactNode, useState } from "react";
+import React, { createContext, useContext, ReactNode, useMemo, useState } from "react";
 import Modal from "../components/utils/Modal";
 import { useModalContext } from "./ModalContext";
 import Button from "../components/utils/Button";
 import DropDown, { DropDownItemData } from "../components/utils/DropDown";
 import { Box } from "@mantine/core";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
-import DottedBackground from "../components/utils/DottedBackground";
 import IconButton from "../components/utils/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import { IoIosCopy } from "react-icons/io";
@@ -14,30 +13,142 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import CodeIcon from "@mui/icons-material/Code";
 import { useTranslation } from "./Translation";
 import SourceIcon from "@mui/icons-material/Source";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
+import { Euler, MathUtils } from "three";
 
 type OptionWithCodeStr = DropDownItemData & {
     codeStr: () => string;
 };
 
 type DataFormat = "lua" | "luaVectors" | "json";
+type RotationOrder = 0 | 1 | 2 | 3 | 4 | 5;
+
+type RotationOrderOption = DropDownItemData & {
+    value: RotationOrder;
+};
+
+type RotationOrderName = "XYZ" | "XZY" | "YXZ" | "YZX" | "ZXY" | "ZYX";
+type Vector3Value = {
+    x: number;
+    y: number;
+    z: number;
+};
+
+const BASE_ROTATION_ORDER: RotationOrder = 1;
+
+// GTA/FiveM applies these native orders opposite of Three.js' Euler labels.
+const THREE_ROTATION_ORDER_NAMES: Record<RotationOrder, RotationOrderName> = {
+    0: "ZYX",
+    1: "YZX",
+    2: "ZXY",
+    3: "XZY",
+    4: "YXZ",
+    5: "XYZ",
+};
+
+const ROTATION_ORDER_OPTIONS: RotationOrderOption[] = [
+    {
+        label: "Order 0 - XYZ",
+        name: "0",
+        value: 0,
+        descriptionItems: ["ox_inventory", "ox_lib progress props"],
+    },
+    {
+        label: "Order 1 - XZY (Base)",
+        name: "1",
+        value: 1,
+        descriptionItems: ["zyke_smoking", "zyke_consumables", "zyke_propaligner"],
+    },
+    {
+        label: "Order 2 - YXZ",
+        name: "2",
+        value: 2,
+    },
+    {
+        label: "Order 3 - YZX",
+        name: "3",
+        value: 3,
+    },
+    {
+        label: "Order 4 - ZXY",
+        name: "4",
+        value: 4,
+    },
+    {
+        label: "Order 5 - ZYX",
+        name: "5",
+        value: 5,
+    },
+];
+
+const isVector3 = (value: unknown): value is Vector3Value => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+    const vector = value as Partial<Vector3Value>;
+    const keys = Object.keys(value);
+    return (
+        keys.length === 3 &&
+        keys.includes("x") &&
+        keys.includes("y") &&
+        keys.includes("z") &&
+        typeof vector.x === "number" &&
+        typeof vector.y === "number" &&
+        typeof vector.z === "number"
+    );
+};
+
+function roundRotationValue(value: number) {
+    const rounded = Math.round(value * 1000000) / 1000000;
+    return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function reorderRotation(value: Vector3Value, targetOrder: RotationOrder) {
+    if (targetOrder === BASE_ROTATION_ORDER) return value;
+
+    const rotation = new Euler(
+        MathUtils.degToRad(value.x),
+        MathUtils.degToRad(value.y),
+        MathUtils.degToRad(value.z),
+        THREE_ROTATION_ORDER_NAMES[BASE_ROTATION_ORDER]
+    );
+
+    rotation.reorder(THREE_ROTATION_ORDER_NAMES[targetOrder]);
+
+    return {
+        x: roundRotationValue(MathUtils.radToDeg(rotation.x)),
+        y: roundRotationValue(MathUtils.radToDeg(rotation.y)),
+        z: roundRotationValue(MathUtils.radToDeg(rotation.z)),
+    };
+}
+
+function withRotationOrderValues(
+    obj: unknown,
+    targetOrder: RotationOrder,
+    key?: string
+): unknown {
+    if (key === "rotation" && isVector3(obj)) {
+        return reorderRotation(obj, targetOrder);
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map((value) => withRotationOrderValues(value, targetOrder));
+    }
+
+    if (!obj || typeof obj !== "object") return obj;
+
+    return Object.fromEntries(
+        Object.entries(obj as Record<string, unknown>)
+            .filter(([entryKey]) => entryKey !== "restrictedFields")
+            .map(([entryKey, value]) => [
+                entryKey,
+                withRotationOrderValues(value, targetOrder, entryKey),
+            ])
+    );
+}
 
 // Utility to convert JS object to indented Lua string
 function toLua(obj: any, indent = 0, useVectors = false): string {
     const pad = (n: number) => "    ".repeat(n);
-    const isVector3 = (value: any) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-
-        const keys = Object.keys(value);
-        return (
-            keys.length === 3 &&
-            keys.includes("x") &&
-            keys.includes("y") &&
-            keys.includes("z") &&
-            typeof value.x === "number" &&
-            typeof value.y === "number" &&
-            typeof value.z === "number"
-        );
-    };
 
     if (obj === null) return "nil";
     if (typeof obj === "string") return `"${obj.replace(/"/g, '"')}"`;
@@ -83,7 +194,13 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
 }) => {
     const [tab, setTab] = useState<DataFormat>("lua");
     const [open, setOpen] = useState<boolean>(false);
+    const [rotationOpen, setRotationOpen] = useState<boolean>(false);
+    const [rotationOrder, setRotationOrder] = useState<RotationOrder>(BASE_ROTATION_ORDER);
     const [copied, setCopied] = useState(false);
+    const outputData = useMemo(
+        () => withRotationOrderValues(data, rotationOrder),
+        [data, rotationOrder]
+    );
 
     const optionsWithCodeStr: OptionWithCodeStr[] = [
         {
@@ -91,23 +208,39 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
             name: "lua",
             icon: <SourceIcon />,
             onClick: () => setTab("lua"),
-            codeStr: () => toLua(data),
+            codeStr: () => toLua(outputData),
         },
         {
             label: "Lua (Vectors)",
             name: "luaVectors",
             icon: <SourceIcon />,
             onClick: () => setTab("luaVectors"),
-            codeStr: () => toLua(data, 0, true),
+            codeStr: () => toLua(outputData, 0, true),
         },
         {
             label: "JSON",
             name: "json",
             icon: <SourceIcon />,
             onClick: () => setTab("json"),
-            codeStr: () => JSON.stringify(data, null, 4),
+            codeStr: () => JSON.stringify(outputData, null, 4),
         },
     ];
+
+    const selectedRotationOrder =
+        ROTATION_ORDER_OPTIONS.find((option) => option.value === rotationOrder) ||
+        ROTATION_ORDER_OPTIONS[0];
+
+    const rotationOptions: RotationOrderOption[] = ROTATION_ORDER_OPTIONS.map(
+        ({ label, name, icon, value, descriptionItems, description }) => ({
+            label,
+            name,
+            icon,
+            value,
+            descriptionItems,
+            description,
+            onClick: () => setRotationOrder(value),
+        })
+    );
 
     const availableOptions: DropDownItemData[] = optionsWithCodeStr.map(
         ({ label, name, icon, onClick }) => ({
@@ -117,6 +250,32 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
             onClick,
         })
     );
+
+    const renderDropDownItem = (props: any) => {
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    gap: "0.3rem",
+                    alignItems: "center",
+                    width: "calc(100% - 2rem)",
+
+                    "& p": {
+                        fontSize: "1.3rem",
+
+                        color: "rgba(var(--text))",
+                    },
+
+                    "& svg": {
+                        fontSize: "1.3rem",
+                    },
+                }}
+            >
+                {props.icon}
+                <p>{props.label}</p>
+            </Box>
+        );
+    };
 
     const { codeString, language, style, label } = getTabSettings(
         tab,
@@ -148,45 +307,23 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
         <div style={{ position: "relative" }}>
             <div
                 style={{
-                    width: "20rem",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                    gap: "0.75rem",
+                    alignItems: "start",
                 }}
             >
                 <DropDown
                     items={availableOptions}
                     open={open}
                     setOpen={setOpen}
-                    position="bottom"
+                    position="bottom-left"
                     styling={{
                         position: "absolute",
                     }}
                     closeOnClick
-                    itemComponent={(props) => {
-                        return (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    gap: "0.3rem",
-                                    alignItems: "center",
-                                    width: "calc(100% - 2rem)",
-
-                                    "& p": {
-                                        fontSize: "1.3rem",
-
-                                        color: "rgba(var(--text))",
-                                    },
-
-                                    "& svg": {
-                                        fontSize: "1.3rem",
-                                    },
-                                }}
-                            >
-                                {props.icon}
-                                <p>{props.label}</p>
-                            </Box>
-                        );
-                    }}
+                    itemComponent={renderDropDownItem}
                 >
-                    <DottedBackground />
                     <Button
                         buttonStyling={{
                             width: "100%",
@@ -219,6 +356,69 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
                                     }}
                                 >
                                     {label || "MISSING LABEL"}
+                                </p>
+                            </div>
+                        </div>
+                        <UnfoldMoreIcon
+                            sx={{
+                                fill: "rgba(var(--secIcon)) !important",
+                                width: "1.5rem",
+                                height: "1.5rem",
+                                position: "absolute",
+                                right: "0rem",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                            }}
+                        />
+                    </Button>
+                </DropDown>
+
+                <DropDown
+                    items={rotationOptions}
+                    open={rotationOpen}
+                    setOpen={setRotationOpen}
+                    position="bottom-left"
+                    styling={{
+                        position: "absolute",
+                    }}
+                    closeOnClick
+                >
+                    <Button
+                        buttonStyling={{
+                            width: "100%",
+                            marginBottom: "0.75rem",
+                            marginTop: "0",
+                            position: "relative",
+                        }}
+                        icon={<RotateRightIcon />}
+                        onClick={() => setRotationOpen(!rotationOpen)}
+                        removeDefaultComponent
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "0.3rem",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                width: "calc(100% - 2rem)",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-start",
+                                    minWidth: 0,
+                                    width: "100%",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        fontSize: "1.3rem",
+                                        textAlign: "left",
+                                    }}
+                                >
+                                    {selectedRotationOrder.label}
                                 </p>
                             </div>
                         </div>
