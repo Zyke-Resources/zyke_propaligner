@@ -46,14 +46,19 @@ function toLua(obj: any, indent = 0, useVectors = false): string {
     if (useVectors && isVector3(obj)) return `vector3(${obj.x}, ${obj.y}, ${obj.z})`;
 
     if (Array.isArray(obj)) {
+        if (obj.length === 0) return "{}";
+
         return `{
 ${obj.map((v) => pad(indent + 1) + toLua(v, indent + 1, useVectors)).join(",\n")}
 ${pad(indent)}}`;
     }
 
     if (typeof obj === "object") {
+        const entries = Object.entries(obj);
+        if (entries.length === 0) return "{}";
+
         return `{
-${Object.entries(obj)
+${entries
     .map(([k, v]) => `${pad(indent + 1)}["${k}"] = ${toLua(v, indent + 1, useVectors)}`)
     .join(",\n")}
 ${pad(indent)}}`;
