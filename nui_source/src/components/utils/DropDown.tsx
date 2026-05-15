@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useClickOutside } from "@mantine/hooks";
 import { Box, Radio } from "@mantine/core";
 
-const itemHeight = "2.3rem";
+const defaultItemHeight = "2.3rem";
 const dividerHeight = "0.1rem";
 const dividerMarginTop = "0.4rem";
 const dividerMarginBottom = "0.4rem";
+const itemDescriptionHeight = 1.05;
 
 // The data for the item that is passed in
 export interface DropDownItemData {
@@ -15,6 +16,8 @@ export interface DropDownItemData {
     name: string;
     icon?: ReactNode | ((data: { style: React.CSSProperties }) => ReactNode);
     radioButton?: boolean;
+    description?: string;
+    descriptionItems?: string[];
     onClick?: () => void;
 }
 
@@ -25,6 +28,31 @@ interface DropDownTitleData {
 }
 
 type DropDownItemType = DropDownItemData | DropDownTitleData;
+type DropDownItemHeight = string | ((item: DropDownItemType) => string);
+
+const isDropDownItemData = (item: DropDownItemType): item is DropDownItemData => {
+    return "name" in item;
+};
+
+const getDefaultItemHeight = (item: DropDownItemType) => {
+    if (!isDropDownItemData(item)) return defaultItemHeight;
+
+    const descriptionItemCount = item.descriptionItems?.length || 0;
+    if (descriptionItemCount > 0) {
+        return `${2.3 + descriptionItemCount * itemDescriptionHeight}rem`;
+    }
+
+    if (item.description) return `${2.3 + itemDescriptionHeight}rem`;
+
+    return defaultItemHeight;
+};
+
+const getDropDownItemHeight = (
+    itemHeight: DropDownItemHeight,
+    item: DropDownItemType
+) => {
+    return typeof itemHeight === "function" ? itemHeight(item) : itemHeight;
+};
 
 // The item data & props to construct it in the dropdown menu
 interface DropDownItem {
@@ -40,8 +68,12 @@ interface DropDownItem {
     itemComponent?: (item: any) => ReactNode;
     selected?: boolean;
     radioButton?: boolean;
+    description?: string;
+    descriptionItems?: string[];
     menuId: string;
     item: DropDownItemType;
+    items: DropDownItemType[];
+    itemHeight: string;
     globalOnClick?: (name: string) => void;
 }
 
@@ -59,10 +91,12 @@ interface DropDownProps {
         | "left-up"
         | "left"
         | "bottom"
+        | "bottom-left"
         | "bottom-right"
         | "right"
         | "right-up";
     itemComponent?: (item: any) => ReactNode;
+    itemHeight?: DropDownItemHeight;
 }
 
 const DropDown: React.FC<DropDownProps> = ({
@@ -77,6 +111,7 @@ const DropDown: React.FC<DropDownProps> = ({
     closeOnClick,
     position,
     itemComponent,
+    itemHeight = getDefaultItemHeight,
 }) => {
     const generateMenuId = () =>
         "dropdown-" + Math.random().toString(36).substr(2, 9);
@@ -158,6 +193,10 @@ const DropDown: React.FC<DropDownProps> = ({
             translateY: "3rem",
             translateX: `${middle}rem`,
         },
+        ["bottom-left"]: {
+            translateY: "3rem",
+            translateX: "0rem",
+        },
         ["bottom-right"]: {
             translateY: "3.5rem",
         },
@@ -217,8 +256,10 @@ const DropDown: React.FC<DropDownProps> = ({
                         >
                             <HoverBox
                                 menuId={menuId}
+                                items={items}
                                 hoverIdx={hoverIdx}
                                 shouldAnimateHoverBox={shouldAnimateHoverBox}
+                                itemHeight={itemHeight}
                             />
 
                             <ItemList
@@ -230,6 +271,7 @@ const DropDown: React.FC<DropDownProps> = ({
                                 closeOnClick={closeOnClick}
                                 closeDropDown={closeDropDown}
                                 itemComponent={itemComponent}
+                                itemHeight={itemHeight}
                             />
                         </div>
                     </motion.div>
@@ -256,8 +298,12 @@ const Item: React.FC<DropDownItem> = ({
     itemComponent,
     selected, // If the item is marked as selected, to display an extra hoverbox for it, in blue
     radioButton,
+    description,
+    descriptionItems,
     menuId,
     item, // Pass the whole item object to the item component
+    items,
+    itemHeight,
     globalOnClick,
 }) => {
     return (
@@ -265,8 +311,10 @@ const Item: React.FC<DropDownItem> = ({
             {selected && (
                 <HoverBox
                     menuId={menuId}
+                    items={items}
                     hoverIdx={idx}
                     shouldAnimateHoverBox={false}
+                    itemHeight={itemHeight}
                     selected={true}
                 />
             )}
@@ -315,24 +363,104 @@ const Item: React.FC<DropDownItem> = ({
                                 disabled={disabled}
                             />
                         )}
-                        <p
-                            className="truncate"
-                            style={{
-                                cursor: "pointer",
-                                color:
-                                    disabled || isTitle
-                                        ? "rgba(var(--secText))"
-                                        : "rgba(var(--text))",
-                                fontSize: "1.2rem",
-                                fontWeight: "400",
-                            }}
-                        >
-                            {label}
-                        </p>
+                        <ItemContent
+                            label={label}
+                            disabled={disabled}
+                            isTitle={isTitle}
+                            description={description}
+                            descriptionItems={descriptionItems}
+                        />
                     </>
                 )}
             </ButtonBase>
         </>
+    );
+};
+
+interface ItemContentProps {
+    label: string;
+    disabled?: boolean;
+    isTitle?: boolean;
+    description?: string;
+    descriptionItems?: string[];
+}
+
+const ItemContent: React.FC<ItemContentProps> = ({
+    label,
+    disabled,
+    isTitle,
+    description,
+    descriptionItems,
+}) => {
+    const hasDescriptionItems = Boolean(descriptionItems?.length);
+    const showDescription = !hasDescriptionItems && Boolean(description);
+    const textColor =
+        disabled || isTitle ? "rgba(var(--secText))" : "rgba(var(--text))";
+
+    return (
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                minWidth: 0,
+                width: "100%",
+                textAlign: "left",
+            }}
+        >
+            <p
+                className="truncate"
+                style={{
+                    cursor: "pointer",
+                    color: textColor,
+                    fontSize: "1.2rem",
+                    fontWeight: "400",
+                    lineHeight: 1.1,
+                    margin: 0,
+                    textAlign: "left",
+                    width: "100%",
+                }}
+            >
+                {label}
+            </p>
+
+            {hasDescriptionItems ? (
+                <div style={{ width: "100%" }}>
+                    {descriptionItems?.map((item) => (
+                        <p
+                            key={item}
+                            style={{
+                                color: "rgba(var(--secText))",
+                                fontSize: "0.95rem",
+                                fontWeight: 500,
+                                lineHeight: 1.1,
+                                margin: 0,
+                                textAlign: "left",
+                                whiteSpace: "normal",
+                            }}
+                        >
+                            - {item}
+                        </p>
+                    ))}
+                </div>
+            ) : null}
+
+            {showDescription ? (
+                <p
+                    style={{
+                        color: "rgba(var(--secText))",
+                        fontSize: "0.95rem",
+                        lineHeight: 1.1,
+                        margin: 0,
+                        textAlign: "left",
+                        whiteSpace: "normal",
+                    }}
+                >
+                    {description}
+                </p>
+            ) : null}
+        </div>
     );
 };
 
@@ -343,6 +471,7 @@ interface ItemListProps {
     closeOnClick?: boolean;
     closeDropDown: () => void;
     itemComponent?: (item: any) => ReactNode;
+    itemHeight: DropDownItemHeight;
     menuId: string;
     globalOnClick?: (name: string) => void;
 }
@@ -353,6 +482,7 @@ const ItemList: React.FC<ItemListProps> = ({
     closeOnClick,
     closeDropDown,
     itemComponent,
+    itemHeight,
     menuId,
     globalOnClick,
 }) => {
@@ -365,10 +495,12 @@ const ItemList: React.FC<ItemListProps> = ({
                             idx={idx}
                             item={item}
                             menuId={menuId}
+                            items={items}
                             closeOnClick={closeOnClick}
                             closeDropDown={closeDropDown}
                             setHoverIdx={setHoverIdx}
                             itemComponent={itemComponent}
+                            itemHeight={getDropDownItemHeight(itemHeight, item)}
                             globalOnClick={globalOnClick}
                             {...item}
                         />
@@ -379,10 +511,12 @@ const ItemList: React.FC<ItemListProps> = ({
                             idx={idx}
                             item={item}
                             menuId={menuId}
+                            items={items}
                             closeOnClick={closeOnClick}
                             closeDropDown={closeDropDown}
                             setHoverIdx={setHoverIdx}
                             itemComponent={itemComponent}
+                            itemHeight={getDropDownItemHeight(itemHeight, item)}
                             globalOnClick={globalOnClick}
                             {...item}
                         />
@@ -397,25 +531,41 @@ const ItemList: React.FC<ItemListProps> = ({
 
 const HoverBox: React.FC<{
     menuId: string;
+    items: DropDownItemType[];
     hoverIdx: number | null;
     shouldAnimateHoverBox: boolean;
+    itemHeight: DropDownItemHeight;
     selected?: boolean;
-}> = ({ menuId, hoverIdx, shouldAnimateHoverBox, selected }) => {
-    const totalDividers = document.querySelectorAll(
-        "#" + menuId + " .divider"
-    ).length;
+}> = ({ menuId, items, hoverIdx, shouldAnimateHoverBox, itemHeight, selected }) => {
+    const lastHoverIdx = useRef<number | null>(null);
 
-    const itemHeightCalc = `calc(${hoverIdx} * ${itemHeight})`;
+    if (hoverIdx !== null) {
+        lastHoverIdx.current = hoverIdx;
+    }
+
+    const visualIdx = hoverIdx ?? lastHoverIdx.current;
+    const activeItem = visualIdx !== null ? items[visualIdx] : undefined;
+    const activeItemHeight = activeItem
+        ? getDropDownItemHeight(itemHeight, activeItem)
+        : defaultItemHeight;
+
+    const previousItems = visualIdx !== null ? items.slice(0, visualIdx) : [];
+    const previousHeights = previousItems.map((item) =>
+        getDropDownItemHeight(itemHeight, item)
+    );
+    const itemHeightCalc =
+        previousHeights.length > 0 ? `calc(${previousHeights.join(" + ")})` : "0rem";
+    const dividersBefore = previousItems.filter((item) => !("name" in item)).length;
 
     const totalDividerHeightCalc = `calc(${dividerHeight} + ${dividerMarginTop} + ${dividerMarginBottom})`;
-    const totalDividersCalc = `calc(${totalDividers} * ${totalDividerHeightCalc})`;
+    const totalDividersCalc = `calc(${dividersBefore} * ${totalDividerHeightCalc})`;
 
     return (
         <motion.div
             className="hover-box"
             style={{
                 width: "100%",
-                height: itemHeight,
+                height: activeItemHeight,
                 position: "absolute",
                 top: `calc(${itemHeightCalc} + ${totalDividersCalc})`,
                 left: 0,
@@ -424,8 +574,8 @@ const HoverBox: React.FC<{
                 marginTop: "0.4rem",
                 opacity: hoverIdx !== null ? 1 : 0,
                 transition: shouldAnimateHoverBox
-                    ? "top 0.1s, opacity 0.2s"
-                    : "opacity 0.2s, top 0s",
+                    ? "top 0.14s ease, height 0.14s ease, opacity 0.2s"
+                    : "opacity 0.2s, top 0s, height 0s",
             }}
         >
             <div
@@ -434,10 +584,12 @@ const HoverBox: React.FC<{
                         ? "rgba(var(--blue2), 1.0)"
                         : "rgba(var(--grey3), 1.0)",
                     width: "calc(100% - 0.8rem)",
-                    height: itemHeight,
+                    height: activeItemHeight,
                     borderRadius: "var(--borderRadius)",
                     scale: hoverIdx !== null ? "1" : "0.9",
-                    transition: "scale 0.4s",
+                    transition: shouldAnimateHoverBox
+                        ? "scale 0.4s, height 0.14s ease"
+                        : "scale 0.4s, height 0s",
                 }}
             ></div>
         </motion.div>
