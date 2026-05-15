@@ -19,32 +19,49 @@ type OptionWithCodeStr = DropDownItemData & {
     codeStr: () => string;
 };
 
+type DataFormat = "lua" | "luaVectors" | "json";
+
 // Utility to convert JS object to indented Lua string
-function toLua(obj: any, indent = 0): string {
+function toLua(obj: any, indent = 0, useVectors = false): string {
     const pad = (n: number) => "    ".repeat(n);
+    const isVector3 = (value: any) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+        const keys = Object.keys(value);
+        return (
+            keys.length === 3 &&
+            keys.includes("x") &&
+            keys.includes("y") &&
+            keys.includes("z") &&
+            typeof value.x === "number" &&
+            typeof value.y === "number" &&
+            typeof value.z === "number"
+        );
+    };
 
     if (obj === null) return "nil";
     if (typeof obj === "string") return `"${obj.replace(/"/g, '"')}"`;
     if (typeof obj === "number" || typeof obj === "boolean")
         return obj.toString();
+    if (useVectors && isVector3(obj)) return `vector3(${obj.x}, ${obj.y}, ${obj.z})`;
 
     if (Array.isArray(obj)) {
         return `{
-${obj.map((v) => pad(indent + 1) + toLua(v, indent + 1)).join(",\n")}
+${obj.map((v) => pad(indent + 1) + toLua(v, indent + 1, useVectors)).join(",\n")}
 ${pad(indent)}}`;
     }
 
     if (typeof obj === "object") {
         return `{
 ${Object.entries(obj)
-    .map(([k, v]) => `${pad(indent + 1)}["${k}"] = ${toLua(v, indent + 1)}`)
+    .map(([k, v]) => `${pad(indent + 1)}["${k}"] = ${toLua(v, indent + 1, useVectors)}`)
     .join(",\n")}
 ${pad(indent)}}`;
     }
     return "nil";
 }
 
-function getTabSettings(tab: "lua" | "json", options: OptionWithCodeStr[]) {
+function getTabSettings(tab: DataFormat, options: OptionWithCodeStr[]) {
     const option = options.find((option) => option.name === tab) || options[0];
 
     return {
@@ -59,7 +76,7 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
     data,
     title,
 }) => {
-    const [tab, setTab] = useState<"lua" | "json">("lua");
+    const [tab, setTab] = useState<DataFormat>("lua");
     const [open, setOpen] = useState<boolean>(false);
     const [copied, setCopied] = useState(false);
 
@@ -70,6 +87,13 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
             icon: <SourceIcon />,
             onClick: () => setTab("lua"),
             codeStr: () => toLua(data),
+        },
+        {
+            label: "Lua (Vectors)",
+            name: "luaVectors",
+            icon: <SourceIcon />,
+            onClick: () => setTab("luaVectors"),
+            codeStr: () => toLua(data, 0, true),
         },
         {
             label: "JSON",
