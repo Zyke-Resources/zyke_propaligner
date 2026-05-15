@@ -192,7 +192,7 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
     data,
     title,
 }) => {
-    const [tab, setTab] = useState<DataFormat>("lua");
+    const [tab, setTab] = useState<DataFormat>("luaVectors");
     const [open, setOpen] = useState<boolean>(false);
     const [rotationOpen, setRotationOpen] = useState<boolean>(false);
     const [rotationOrder, setRotationOrder] = useState<RotationOrder>(BASE_ROTATION_ORDER);
@@ -204,18 +204,18 @@ const VisualizeDataModalContent: React.FC<{ data: any; title?: string }> = ({
 
     const optionsWithCodeStr: OptionWithCodeStr[] = [
         {
-            label: "Lua",
-            name: "lua",
-            icon: <SourceIcon />,
-            onClick: () => setTab("lua"),
-            codeStr: () => toLua(outputData),
-        },
-        {
             label: "Lua (Vectors)",
             name: "luaVectors",
             icon: <SourceIcon />,
             onClick: () => setTab("luaVectors"),
             codeStr: () => toLua(outputData, 0, true),
+        },
+        {
+            label: "Lua",
+            name: "lua",
+            icon: <SourceIcon />,
+            onClick: () => setTab("lua"),
+            codeStr: () => toLua(outputData),
         },
         {
             label: "JSON",
