@@ -1,5 +1,3 @@
-[![ko-fi banner2](https://github.com/user-attachments/assets/42eff455-5757-4888-ad88-d61893edcc33)](https://ko-fi.com/zykeresources)
-
 # [> Download](https://github.com/ZykeWasTaken/zyke_propaligner/releases/latest)
 
 # Information
@@ -25,6 +23,16 @@ The entire project is the first effort to make a great alignment menu, and more 
 
 -   Open the menu via the command in the config, `/palign` by default.
 -   Start filling out the information, or go to `Presets` to import a base to get started from.
+
+## Showcase
+
+<img src="https://api.zykeresources.com/static/images/temp/MTCyY224XNE-0wPHl1rqBe7GgSfGTONzlH_aDBzlshKMtmx_WSFkRN1BOVPEEDe2.png" style="width: 800px; height: auto;">
+
+<img src="https://api.zykeresources.com/static/images/temp/Ew5RAtNxisuWy0GoMNHcKi_oA9BsORBT-zl87duOtRQbSmEaB4-7YofYILTABgrT.png" style="width: 800px; height: auto;">
+
+<img src="https://api.zykeresources.com/static/images/temp/yV4p6HM82M2D65W6byIlN6R_YiDQNTLZQ71S3k70cZxI2D5BUjWGn2dkcWtUoGe0.png" style="width: 800px; height: auto;">
+
+<img src="https://api.zykeresources.com/static/images/temp/wvEFj0AN-yodevDp1wu0C1_-hfXVcxqiy4OIYVpn9HtuA6UkWxkynLBl0ojN8wB1.png" style="width: 800px; height: auto;">
 
 ## Demo Presets
 
@@ -194,19 +202,9 @@ restrictedFields = {
 
 Restrictions are resolved by field path. A specific key such as `particles.size` only affects that field, while a broader key such as `particles` can be used by any particle input that supports restrictions. More specific keys override broader ones.
 
-## Showcase
-
-<img src="https://github.com/user-attachments/assets/9d91ec51-8fb7-40cb-bf23-59148d8c36f0" style="width: 800px; height: auto;">
-
-<img src="https://github.com/user-attachments/assets/543885d7-ca03-4374-b473-83085684f182" style="width: 800px; height: auto;">
-
-<img src="https://r2.fivemanage.com/mS9apQyi6ahmBBRtVnQAv/PropalignerShowcaseAlignment.png" style="width: 800px; height: auto;">
-
-<img src="https://github.com/user-attachments/assets/05c04642-e1ec-4eea-b534-17ccbec75dc3" style="width: 800px; height: auto;">
-
 ## Development Details
 
--   We use a rotation order of 1, see [native documentation](https://docs.fivem.net/natives/?_0xAFBD61CC738D9EB9) for more info.
+-   We use a rotation order of 1, see [native documentation](https://docs.fivem.net/natives/?_0xAFBD61CC738D9EB9) for more info. With [version 1.5.1](https://docs.zykeresources.com/free-resources/propaligner/changelog#changelog-version-1.5.1), you can now use the "visualize data" menu to change rotation order to copy into scripts that have another rotation. This does not naively swap the values, we use euler to translate it.
 
 ## Dependencies
 
