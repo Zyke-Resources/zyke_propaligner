@@ -25,6 +25,8 @@ import DottedBackground from "../utils/DottedBackground";
 import CornerStyling from "../utils/CornerStyling";
 import SectionTitle from "../utils/SectionTitle";
 import ParticleSection from "../particle_section/ParticleSection";
+import Tooltip from "../utils/Tooltip";
+import { useFieldRestriction } from "../../context/FieldRestrictions";
 
 interface PropAlignmentsProps {
     idx: number;
@@ -65,6 +67,11 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
 
     const { openModal, closeModal } = useModalContext();
     const modalId = "prop-" + tempId;
+    const propModelRestriction = useFieldRestriction("props.prop");
+    const propOrderRestriction = useFieldRestriction("props.order");
+    const propDeleteRestriction = useFieldRestriction("props.delete");
+    const makePrimaryDisabled = idx === 0 || propOrderRestriction.disabled;
+    const deleteDisabled = totalProps <= 1 || propDeleteRestriction.disabled;
 
     const setValue = (
         path: "rotation" | "offset",
@@ -109,6 +116,7 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
     }, [showStarterTooltip]);
 
     const makePrimary = () => {
+        if (propOrderRestriction.disabled) return;
         if (idx === 0) return;
 
         setEditingData((prev) => {
@@ -121,6 +129,7 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
     };
 
     const deleteProp = async () => {
+        if (propDeleteRestriction.disabled) return;
         if (totalProps <= 1) return;
 
         closeModal(modalId);
@@ -223,27 +232,35 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
                         gap: "1rem",
                     }}
                 >
-                    <TextInput
-                        icon={<FaBox />}
-                        label={T("propLabel")}
-                        value={prop}
-                        error={
-                            !modelValid ? T("invalidModelWarning") : undefined
-                        }
-                        onChange={(e) =>
-                            setEditingData((prev) => ({
-                                ...prev,
-                                props: prev.props.map((item, i) =>
-                                    i === idx
-                                        ? {
-                                              ...item,
-                                              prop: e.target.value,
-                                          }
-                                        : item
-                                ),
-                            }))
-                        }
-                    />
+                    <Tooltip
+                        label={propModelRestriction.tooltip}
+                        disabled={!propModelRestriction.disabled}
+                    >
+                        <div>
+                            <TextInput
+                                icon={<FaBox />}
+                                label={T("propLabel")}
+                                value={prop}
+                                error={
+                                    !modelValid ? T("invalidModelWarning") : undefined
+                                }
+                                disabled={propModelRestriction.disabled}
+                                onChange={(e) =>
+                                    setEditingData((prev) => ({
+                                        ...prev,
+                                        props: prev.props.map((item, i) =>
+                                            i === idx
+                                                ? {
+                                                      ...item,
+                                                      prop: e.target.value,
+                                                  }
+                                                : item
+                                        ),
+                                    }))
+                                }
+                            />
+                        </div>
+                    </Tooltip>
                     <Select
                         label={T("propBone")}
                         icon={<PiBoneFill />}
@@ -361,8 +378,13 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
                         icon={<LuCrown />}
                         color="rgba(var(--blue2))"
                         onClick={makePrimary}
-                        disabled={idx === 0}
-                        hollow={idx === 0}
+                        disabled={makePrimaryDisabled}
+                        hollow={makePrimaryDisabled}
+                        tooltipLabel={
+                            propOrderRestriction.disabled
+                                ? propOrderRestriction.tooltip
+                                : undefined
+                        }
                         buttonStyling={{
                             marginRight: "0.75rem",
                         }}
@@ -372,8 +394,13 @@ const PropAlignments: React.FC<PropAlignmentsProps> = ({
                     <Button
                         icon={<DeleteIcon />}
                         color="rgba(var(--red3))"
-                        disabled={totalProps <= 1}
-                        hollow={totalProps <= 1}
+                        disabled={deleteDisabled}
+                        hollow={deleteDisabled}
+                        tooltipLabel={
+                            propDeleteRestriction.disabled
+                                ? propDeleteRestriction.tooltip
+                                : undefined
+                        }
                         onClick={async () => deleteProp()}
                     >
                         {T("deleteProp")}

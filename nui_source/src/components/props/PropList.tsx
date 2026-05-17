@@ -5,6 +5,7 @@ import Button from "../utils/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "../../context/Translation";
 import SectionTitle from "../utils/SectionTitle";
+import { useFieldRestriction } from "../../context/FieldRestrictions";
 
 interface PropListProps {
     editingData: AlignmentData;
@@ -26,6 +27,12 @@ const PropList: React.FC<PropListProps> = ({
     onStarterTooltipDismiss,
 }) => {
     const T = useTranslation();
+    const propRestriction = useFieldRestriction("props");
+    const hasReachedMaxProps =
+        propRestriction.maxCount !== undefined &&
+        editingData.props.length >= propRestriction.maxCount;
+    const addPropDisabled =
+        hasInvalidModels || propRestriction.disabled || hasReachedMaxProps;
 
     return (
         <>
@@ -61,7 +68,12 @@ const PropList: React.FC<PropListProps> = ({
                     color="rgba(var(--blue2))"
                     icon={<AddIcon />}
                     onClick={async () => await addbaseProp()}
-                    disabled={hasInvalidModels}
+                    disabled={addPropDisabled}
+                    tooltipLabel={
+                        addPropDisabled && !hasInvalidModels
+                            ? propRestriction.tooltip
+                            : undefined
+                    }
                 >
                     {T(
                         editingData.props.length > 0
