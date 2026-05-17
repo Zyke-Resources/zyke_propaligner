@@ -41,10 +41,10 @@ const Particle: React.FC<ParticleProps> = ({
         }
 
         setEditingData((prev) => {
-            const updatedProps = prev.props.map((prop, idx) => {
-                if (idx === propIdx) {
+            const updatedProps = prev.props.map((prop, propIndex) => {
+                if (propIndex === propIdx) {
                     const updatedParticles = prop.particles
-                        ? prop.particles.filter((_, index) => index !== idx)
+                        ? prop.particles.filter((_, particleIndex) => particleIndex !== idx)
                         : null;
 
                     return { ...prop, particles: updatedParticles };
@@ -74,6 +74,7 @@ const Particle: React.FC<ParticleProps> = ({
                         ...newProps[propIdx],
                         particles: newParticles,
                     },
+                    ...newProps.slice(propIdx + 1),
                 ],
             };
         });
