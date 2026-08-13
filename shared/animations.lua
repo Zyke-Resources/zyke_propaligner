@@ -1,7 +1,7 @@
 -- List of pre-configured animations to get started quickly
 -- These are not forced, you can still input any animation in the menu
 -- Feel free to share your combinations in our Discord to help others! <3
--- https://discord.gg/zykeresources
+-- https://discord.zykeresources.com
 
 return {
 	{

@@ -212,7 +212,7 @@ Restrictions are resolved by field path. A specific key such as `particles.size`
 
 ## General Links
 
--   [Discord Community](https://discord.gg/zykeresources)
+-   [Discord Community](https://discord.zykeresources.com)
 -   [Store](https://store.zykeresources.com)
 -   [Documentation](https://docs.zykeresources.com/free-resources/propaligner)
 
